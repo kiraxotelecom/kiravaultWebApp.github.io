@@ -21,7 +21,11 @@ nav button{font-size:12px}.gb{background:linear-gradient(#5CF0B0,#1FB36B);color:
 i{display:block}.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.dy{padding:6px 0;border-radius:10px;cursor:pointer}.dy.on{background:var(--accent);color:#fff}.dy i{height:10px;line-height:10px;font-style:normal}
 ul{padding-left:18px;margin:8px 0}li{margin:4px 0;font-size:13px}#fab{position:fixed;right:18px;bottom:calc(72px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;font-size:28px;padding:0;box-shadow:0 4px 14px #0004;z-index:5}
 nav{max-width:640px;margin:auto}nav button{padding:9px 0 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px}nav button b{font-size:22px;font-weight:400;line-height:1}nav .on{background:color-mix(in srgb,var(--accent) 14%,transparent);border-radius:14px}main{padding-bottom:110px}#fab{bottom:calc(88px + env(safe-area-inset-bottom))}
-</style></head><body><header id=hd><img src=icon-192.png alt=''><b>KiraVault</b></header><main id=m></main><nav id=nav></nav><dialog id=dlg></dialog><button id=fab class=p onclick=quickAdd()>+</button><div id=sp><button class=gb onclick="sp.remove();sessionStorage.s=1">Get Started</button></div>
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:8;display:flex;align-items:center;gap:14px;background:var(--text);color:var(--bg);padding:10px 12px 10px 16px;border-radius:14px;box-shadow:0 6px 20px #0005;max-width:92vw}#toast[hidden]{display:none}#toast button{background:var(--accent);color:#fff}
+#lk{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}#lk[hidden]{display:none}
+.kp{display:grid;grid-template-columns:repeat(3,72px);gap:12px}.kp button{height:72px;border-radius:50%;font-size:24px;padding:0}#lkd{display:flex;gap:14px;margin:6px}#lkd i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted)}#lkd i.f{background:var(--accent);border-color:var(--accent)}
+body.locked>:not(#lk),body.priv>:not(#lk){visibility:hidden}input[type=search]{-webkit-appearance:none}
+</style></head><body><header id=hd><img src=icon-192.png alt=''><b>KiraVault</b></header><main id=m></main><nav id=nav></nav><dialog id=dlg></dialog><div id=toast hidden></div><div id=lk hidden></div><button id=fab class=p onclick=quickAdd()>+</button><div id=sp><button class=gb onclick="sp.remove();sessionStorage.s=1;persist(1)">Get Started</button></div>
 <script>
 const $=s=>document.querySelector(s),K='kiravault.web.v1',E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),F=n=>Math.round(n).toLocaleString('en-US'),
  td=()=>new Date().toLocaleDateString('sv'),me=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toLocaleDateString('sv')},
@@ -37,13 +41,13 @@ const KINDS=['Rent','Internet','Electricity','Debt','Subscription','Planned Purc
  DK={bg:'#0D1221',card:'#161D33',text:'#F4F6FF',muted:'#94A3C1',green:'#3FD08F',red:'#F76B6B',amber:'#FDB844',line:'#323B58',blue:'#6AA8FF',gb:'#14403A',rb:'#3A1E2A',ab:'#3A2D12',teal:'#34D9C3',tb:'#10403F',pu:'#A78BFA',pb:'#2D2552'},
  AC={Blue:['#3D5AFE','#6673F5'],Green:['#22A559','#3FD08F'],Purple:['#7C4DFF','#A07BFF'],Orange:['#F57C00','#FFA040']};
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch{}
-S=S||{n:1,acc:['Bank','Mobile Money','Cash'].map(id=>({id,b:0})),tx:[],cm:[],pr:[],set:{mode:'auto',accent:'Blue'},bk:null};const mig=()=>{S.gl=S.gl||[];S.bd=S.bd||{};S.ex=S.ex||[];S.pr.forEach(p=>{p.tk=p.tk||[];p.pg=p.pg||0;p.pri=p.pri||'Medium';p.src=p.src||'Freelance';p.wt=p.wt||'';if(p.st=='Active')p.st='In Progress'})};mig();
-const id=()=>S.n++,save=()=>{localStorage.setItem(K,JSON.stringify(S));render()},acc=n=>S.acc.find(a=>a.id===n),rem=c=>c.amt-c.paid,
+S=S||{n:1,acc:['Bank','Mobile Money','Cash'].map(id=>({id,b:0})),tx:[],cm:[],pr:[],set:{mode:'auto',accent:'Blue'},bk:null};const mig=()=>{S.set=S.set||{mode:'auto',accent:'Blue'};S.ri=S.ri||[];S.cr=S.cr||{};S.gl=S.gl||[];S.bd=S.bd||{};S.ex=S.ex||[];S.pr.forEach(p=>{p.tk=p.tk||[];p.pg=p.pg||0;p.pri=p.pri||'Medium';p.src=p.src||'Freelance';p.wt=p.wt||'';if(p.st=='Active')p.st='In Progress'})};mig();
+const id=()=>S.n++,save=()=>{hideT();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert('Could not save: browser storage is full or blocked. Export a backup now.')}render()},acc=n=>S.acc.find(a=>a.id===n),rem=c=>c.amt-c.paid,
  paid=p=>p.pay.reduce((a,x)=>a+x.amt,0),
  cst=c=>{if(c.st=='paid')return'paid';const n=dd(c.due);return n===null?'up':n<0?'od':n<=3?'soon':'up'},
  dtx=c=>{if(c.st=='paid')return'Paid';const n=dd(c.due);return n===null?'No due date':n<0?`${-n} day${n==-1?'':'s'} overdue`:n==0?'Due today':n==1?'Due tomorrow':`Due in ${n} days`};
 function theme(){const d=S.set.mode=='dark'||(S.set.mode=='auto'&&matchMedia('(prefers-color-scheme:dark)').matches),c={...(d?DK:LT),accent:AC[S.set.accent][+d]};for(const k in c)document.documentElement.style.setProperty('--'+k,c[k]);document.querySelector('meta[name=theme-color]').content=c.accent}
-function sm(){const e=me(),av=S.acc.reduce((a,x)=>a+x.b,0),g={Bills:0,Debt:0,Savings:0};let pb=0,pn=0;S.cm.filter(c=>c.st=='pending').forEach(c=>{const k=c.kind=='Debt'?'Debt':c.kind=='Savings'?'Savings':'Bills';if(!c.due||c.due<=e)g[k]+=rem(c);if(k=='Bills'){pb+=rem(c);pn++}});const cm=g.Bills+g.Debt+g.Savings,pw=S.pr.filter(p=>p.src!='Job'&&p.st!='Cancelled').reduce((a,p)=>a+Math.max(p.amt-paid(p),0),0),aw=S.ex.reduce((a,x)=>a+x.amt,0);return{av,cm,g,pb,pn,aw,pw,sv:S.gl.reduce((a,x)=>a+x.saved,0),safe:Math.max(av-cm,0),short:Math.max(cm-av,0)}}
+function sm(){const e=me(),av=S.acc.reduce((a,x)=>a+x.b,0),g={Bills:0,Debt:0,Savings:0};let pb=0,pn=0;S.cm.filter(c=>c.st=='pending').forEach(c=>{const k=c.kind=='Debt'?'Debt':c.kind=='Savings'?'Savings':'Bills';if(!c.due||c.due<=e)g[k]+=rem(c);if(k=='Bills'){pb+=rem(c);pn++}});const cm=g.Bills+g.Debt+g.Savings,pw=S.pr.filter(p=>p.src!='Job'&&p.st!='Cancelled').reduce((a,p)=>a+Math.max(p.amt-paid(p),0),0),aw=S.ex.reduce((a,x)=>a+x.amt,0)+riOcc(30).reduce((a,o)=>a+o.amt,0);return{av,cm,g,pb,pn,aw,pw,sv:S.gl.reduce((a,x)=>a+x.saved,0),safe:Math.max(av-cm,0),short:Math.max(cm-av,0)}}
 const sh=n=>{const a=Math.abs(n);return(n<0?'-':'')+(a>=1e6?(a/1e6).toFixed(1).replace(/\.0$/,'')+'M':a>=1e3?Math.round(a/1e3)+'K':Math.round(a))},
  C=(c,bg,x,a='')=>`<div class=card ${a} style="border-left:5px solid var(--${c});${bg?'background:var(--'+bg+')':''}">${x}</div>`,
  H=(t,c)=>`<small style="color:var(--${c});font-weight:700;text-transform:uppercase">${t}</small>`,
@@ -59,13 +63,13 @@ function ask(title,fs,ok){const d=$('#dlg');d.innerHTML=`<form><h3>${title}</h3>
 const AN=()=>S.acc.map(a=>a.id);
 function txForm(v={}){ask('Add transaction',[{k:'type',l:'Type',o:['expense','income'],v:v.type},{k:'amt',l:'Amount (25k, 1.5m, 150,000)',v:v.amt,m:1},{k:'acc',l:'Account',o:AN(),v:v.acc||'Cash'},{k:'cat',l:'Category (expense) / source (income)',o:[...CATS,'Salary','Freelance','Business','Gift','Other'],v:v.cat},{k:'desc',l:'Note',v:v.desc},{k:'date',l:'Date',t:'date',v:v.date||td()}],f=>{
  const a=pa(f.amt);if(!a)return'Enter a valid amount';if(f.type!='income'&&acc(f.acc).b<a)return`${f.acc} only has UGX ${F(acc(f.acc).b)}`;if(f.type=='transfer'&&f.to==f.acc)return'Pick two different accounts';
- addTx(f.type,a,f.acc,f.cat,f.desc,f.date,{to:f.to});save()})}
+ addTx(f.type,a,f.acc,f.cat,f.desc,f.date,{to:f.to});learn(f.desc,f.cat,f.type);save()})}
 function qk(f){const t=f.t.value,l=' '+t.toLowerCase()+' ',m=l.match(/(?<![\w.])(\d[\d,]*(?:\.\d+)?)\s*(k|m)?(?![a-z0-9])/);if(!m){alert('Include an amount, e.g. spent 25k on lunch cash');return false}
  let r=l.replace(m[0],' '),ac=/mobile|momo|mtn|airtel|\bmm\b/.test(r)?'Mobile Money':/\bbank\b/.test(r)?'Bank':/\bcash\b/.test(r)?'Cash':null,date=td();
  r=r.replace(/mobile money|momo|mtn|airtel money|airtel|mobile|\bmm\b|\bbank\b|\bcash\b/g,' ');if(/\byesterday\b/.test(r))date=addD(date,-1);
  const W=r.match(/[a-z']+/g)||[],inc=W.some(w=>/^(received|got|earned|deposit|deposited|salary|freelance|client|gift)$/.test(w))&&!W.some(w=>/^(spent|paid|bought|pay|buy)$/.test(w)),
  STOP=/^(spent|spend|paid|pay|bought|buy|purchased|gave|received|receive|got|earned|deposit|deposited|on|for|from|via|using|with|by|to|the|a|an|my|in|at|into|of|me|i|ugx|shs|today|yesterday)$/,
- D=W.filter(w=>!STOP.test(w)),cat=inc?'Other':(D.map(w=>Object.keys(CW).find(k=>CW[k].split(' ').includes(w))).find(Boolean)||'Others');
+ D=W.filter(w=>!STOP.test(w)),cat=gs(D,inc);
  setTimeout(()=>txForm({type:inc?'income':'expense',amt:pa(m[1]+(m[2]||'')),acc:ac,cat,desc:D.join(' ').replace(/^./,c=>c.toUpperCase()),date}),0);return false}
 function payC(c){ask('Pay '+E(c.title),[{k:'amt',l:`Amount (UGX ${F(rem(c))} left)`,v:rem(c),m:1},{k:'acc',l:'From',o:AN(),v:c.acc}],f=>{const a=pa(f.amt);if(!a)return'Enter a valid amount';if(a>rem(c)+.5)return`Only UGX ${F(rem(c))} is owed`;if(acc(f.acc).b<a)return`${f.acc} only has UGX ${F(acc(f.acc).b)}`;
  addTx(c.kind=='Savings'?'saving':'expense',a,f.acc,K2C[c.kind]||'Others',c.title,td(),{cid:c.id});c.paid+=a;if(c.paid>=c.amt-.5){c.paid=c.amt;c.st='paid';if(c.rec=='Monthly'||c.rec=='Weekly')S.cm.push({...c,id:id(),paid:0,st:'pending',due:c.rec=='Monthly'?addM(c.due||td(),1):addD(c.due||td(),7)})}save()})}
@@ -76,23 +80,23 @@ const row=(t,s,r,c='',x='')=>`<div class=row2 ${x}><div><b>${E(t)}</b><small>${E
  cRow=c=>{const s=cst(c);return row(c.title,`${c.kind} · ${dtx(c)}`,`${F(rem(c))} ${s!='paid'?`<br><button class="s p" onclick="payC(S.cm.find(c=>c.id==${c.id}))">${c.kind=='Savings'?'Mark saved':'Pay'}</button>`:''}`,{od:'r',soon:'a'}[s]||'')};
 let tab='home',pj=null,wt='Projects',wf='All',wv='p',mv='a',cd=new Date(),sd=td();const T={home:'Home',work:'Work',cal:'Calendar',money:'Finance',ins:'Insights',more:'Settings'},IC={home:'🏠',work:'💼',cal:'📅',money:'💰',ins:'📊',more:'⚙️'};
 const V={home(){const s=sm(),nm=S.set.name,hr=new Date().getHours(),gr=hr<12?'GOOD MORNING':hr<17?'GOOD AFTERNOON':'GOOD EVENING',neg=s.short>0,
- at=[...S.cm.filter(c=>c.st=='pending'&&cst(c)=='od').map(c=>[c.title+' is '+dtx(c),'r']),...S.cm.filter(c=>c.st=='pending'&&cst(c)=='soon').map(c=>[c.title+': '+dtx(c).toLowerCase(),'a']),...S.pr.filter(p=>p.dl&&!DONE.includes(p.st)&&dd(p.dl)<=7).map(p=>[p.title+(dd(p.dl)<0?': deadline passed':': deadline in '+dd(p.dl)+' days'),dd(p.dl)<0?'r':'a'])],
+ at=[...S.cm.filter(c=>c.st=='pending'&&cst(c)=='od').map(c=>[c.title+' is '+dtx(c),'r',"mv='b';go('money')"]),...S.cm.filter(c=>c.st=='pending'&&cst(c)=='soon').map(c=>[c.title+': '+dtx(c).toLowerCase(),'a',"mv='b';go('money')"]),...S.pr.filter(p=>p.dl&&!DONE.includes(p.st)&&dd(p.dl)<=7).map(p=>[p.title+(dd(p.dl)<0?': deadline passed':': deadline in '+dd(p.dl)+' days'),dd(p.dl)<0?'r':'a',"pj="+p.id+";go('work')"]),...extraAt()],
  wk=S.pr.filter(p=>p.dl&&!DONE.includes(p.st)&&dd(p.dl)<=7).length;
  return`<div class=top><small><b>${gr}${nm?', '+E(nm).toUpperCase():''}</b></small></div>
  
  ${!S.tx.length&&S.acc.every(a=>!a.b)?C('amber','ab',H('Get started','amber')+'<b style="display:block">Set your opening balances</b><small>Enter what you hold in Bank, Mobile Money and Cash.</small>',"onclick=\"go('more')\""):''}
- ${at.length?C('amber','ab',H('Needs attention','amber')+at.slice(0,6).map(([t,k])=>`<div class="${k}"><b>${E(t)}</b></div>`).join('')+(at.length>6?`<small>+${at.length-6} more</small>`:'')):''}
+ ${at.length?C('amber','ab',H('Needs attention','amber')+at.slice(0,6).map(([t,k,a])=>`<div class="${k}" ${a?`onclick="${a}" style="cursor:pointer;margin:4px 0"`:''}><b>${E(t)}</b></div>`).join('')+(at.length>6?`<small>+${at.length-6} more</small>`:'')):''}
  ${C('blue','',H('Total available','blue')+BG('text','UGX '+F(s.av),28)+S.acc.map(a=>KV(a.id,a.b,a.b<0?'r':'')).join(''))}
  ${C('amber','',H('Committed','amber')+BG('amber','UGX '+F(s.cm))+KV('Bills',s.g.Bills)+KV('Debt',s.g.Debt)+KV('Savings target',s.g.Savings))}
  ${C(neg?'red':'green',neg?'rb':'gb',H('Safe to spend',neg?'red':'green')+BG(neg?'red':'green','UGX '+F(s.safe),36)+'<small>Available money minus everything you\'ve already promised this month.</small>')}
  <div class=grid>${C('teal','tb',H('Expected income','teal')+BG('teal',sh(s.aw),20)+'<small>Not counted until received</small>')}${C('pu','pb',H('Pending bills','pu')+BG('pu',sh(s.pb),20)+`<small>${s.pn} unpaid</small>`)}</div>
  ${C('green','',H('Savings','green')+BG('green','UGX '+F(s.sv),20),"onclick=\"mv='s';go('money')\"")}
  ${C('pu','',H('Work','pu')+`<b style="display:block;font-size:16px">${S.pr.filter(p=>!DONE.includes(p.st)).length} active | ${wk} due within 7 days</b><small>UGX ${F(s.pw)} still unpaid by clients (not counted until received)</small>`,"onclick=\"go('work')\"")}`},
- sav(){return`<div class=top><h1>Savings goals</h1><button class=p onclick=addG()>+ Goal</button></div>`+(S.gl.map(g=>{const p=g.target?Math.min(g.saved/g.target,1):0;return C('green','',`<div class=top><b>${E(g.name)}</b><b class=g>${Math.round(p*100)}%</b></div><small>UGX ${sh(g.saved)} / ${sh(g.target)}</small><div class=bar><i style="width:${p*100}%"></i></div><small>UGX ${sh(Math.max(g.target-g.saved,0))} remaining${g.mo?' | Monthly target: UGX '+sh(g.mo):''}</small>${(g.pd||[]).map(p=>`<div class=top style="margin-top:6px;gap:6px"><small class=a style="flex:1">⏳ Pending UGX ${F(p.amt)} from ${p.acc}</small><button class="s p" onclick="mkS(${g.id},${p.id})">Mark saved</button><button class=s onclick="g_(${g.id}).pd=g_(${g.id}).pd.filter(x=>x.id!=${p.id});save()">✕</button></div>`).join('')}<div class=row style="justify-content:flex-start"><button class="s p" onclick="saveG(${g.id})">Add savings</button><button class=s onclick="delG(${g.id})">Delete</button></div>`)}).join('')||'<small>Create a goal (e.g. New Camera) and set a monthly amount to save.</small>')},
+ sav(){return`<div class=top><h1>Savings goals</h1><button class=p onclick=addG()>+ Goal</button></div>`+(S.gl.map(g=>{const p=g.target?Math.min(g.saved/g.target,1):0;return C('green','',`<div class=top><b>${E(g.name)}</b><b class=g>${Math.round(p*100)}%</b></div><small>UGX ${sh(g.saved)} / ${sh(g.target)}</small><div class=bar><i style="width:${p*100}%"></i></div><small>UGX ${sh(Math.max(g.target-g.saved,0))} remaining${g.mo?' | Monthly target: UGX '+sh(g.mo):''}</small>${(g.pd||[]).map(p=>`<div class=top style="margin-top:6px;gap:6px"><small class=a style="flex:1">⏳ Pending UGX ${F(p.amt)} from ${p.acc}</small><button class="s p" onclick="mkS(${g.id},${p.id})">Mark saved</button><button class=s onclick="UD('Pending saving removed',()=>{g_(${g.id}).pd=g_(${g.id}).pd.filter(x=>x.id!=${p.id})})">✕</button></div>`).join('')}<div class=row style="justify-content:flex-start"><button class="s p" onclick="saveG(${g.id})">Add savings</button><button class=s onclick="delG(${g.id})">Delete</button></div>`)}).join('')||'<small>Create a goal (e.g. New Camera) and set a monthly amount to save.</small>')},
  money(){return`<div class=top><h1>Money</h1><button class=p onclick="txForm()">+ Add</button></div><div class=grid>${S.acc.map(a=>`<div class=card onclick="setB('${a.id}')"><small>${a.id}</small><b>${F(a.b)}</b></div>`).join('')}</div>
  <h3>Transactions</h3><div class=card>${S.tx.slice(0,60).map(t=>row(t.desc||t.cat||t.type,`${t.date} · ${t.acc}${t.type=='transfer'?' → '+t.to:''}`,(t.type=='income'?'+':t.type=='transfer'?'⇄ ':'−')+F(t.amt),t.type=='income'?'g':'',`onclick="if(confirm('Delete and reverse this transaction?')){delTx(S.tx.find(x=>x.id==${t.id}));save()}"`)).join('')||'<small>No transactions yet</small>'}</div>`},
  bills(){const p=S.cm.filter(c=>c.st=='pending').sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1),d=S.cm.filter(c=>c.st=='paid').slice(-5);
- return`<div class=top><h1>Bills & Debts</h1><button class=p onclick=addC()>+ New</button></div><div class=card>${p.map(cRow).join('')||'<small>Nothing pending</small>'}</div>${d.length?`<h3>Recently paid</h3><div class=card>${d.map(cRow).join('')}</div>`:''}`},
+ return`<div class=top><h1>Bills & Debts</h1><button class=p onclick=addC()>+ New</button></div><div class=row style="justify-content:flex-start;margin:0 0 10px"><button class=s onclick=ics()>📅 Add bill reminders to my calendar</button></div><div class=card>${p.map(cRow).join('')||'<small>Nothing pending</small>'}</div>${d.length?`<h3>Recently paid</h3><div class=card>${d.map(cRow).join('')}</div>`:''}`},
  work(){const P=S.pr,o=pj&&p_(pj);if(o)return pdet(o);
   const arch=p=>DONE.includes(p.st)&&(p.src=='Job'||p.amt<=paid(p)),tb=`<div class=tabs>${['Projects','Tasks','Clients'].map(t=>`<button class="${wt==t?'on':''}" onclick="wt='${t}';render()">${t}</button>`).join('')}</div>`;let b='';
   if(wt=='Projects'){const L=P.filter(p=>wf=='Archive'?arch(p):!arch(p)&&(wf=='All'||p.src==wf||(wf=='Unpaid'&&p.amt>paid(p)&&p.st!='Cancelled')));
@@ -103,11 +107,11 @@ const V={home(){const s=sm(),nm=S.set.name,hr=new Date().getHours(),gr=hr<12?'GO
   return`<div class=top><h1>Work</h1><button class=p onclick="projForm()">+ Project</button></div>`+tb+b},
  more(){const o=(k,l,v)=>`<label>${l}<select onchange="S.set.${k}=this.value;save()">${v.map(x=>`<option${S.set[k]==x?' selected':''}>${x}</option>`).join('')}</select></label>`;
  return`<h1>Settings</h1><div class=card><label>Your name<input value="${E(S.set.name||'')}" onchange="S.set.name=this.value;save()"></label>${o('mode','Theme',['auto','light','dark'])}${o('accent','Accent colour',Object.keys(AC))}</div>
- <h3>Opening balances</h3><div class=card><small>Set what you hold in each account right now.</small>${S.acc.map(a=>`<label>${a.id} (UGX)<input inputmode=decimal value="${a.b}" onchange="setBal('${a.id}',this.value)"></label>`).join('')}</div><h3>Backup</h3><div class=card><small>Everything lives on this device only. Last backup: ${S.bk||'never'}</small><div class=row style="justify-content:flex-start"><button class=p onclick=bak()>Export backup</button><button onclick="$('#imp').click()">Restore</button></div><input id=imp type=file accept=.json hidden onchange=imp(this)><small>Restore accepts backups from this web app and JSON backups from the Android app.</small></div>
- <h3>About KiraVault</h3><div class=card style="text-align:center"><img src=icon-192.png width=64 height=64 style="border-radius:16px"><br><b style="font-size:18px">KiraVault</b><br><small>Plan, Work, Grow: your finances and work in one place.</small></div><div class=card><small>KiraVault answers one question: <b>how much can I safely spend?</b> It tracks Bank, Mobile Money and Cash, counts bills, debts and savings as commitments, and never counts client money until it is actually received.</small><ul><li><b>Finance:</b> accounts, transactions, bills &amp; debts and savings goals</li><li><b>Work:</b> projects, tasks, clients and payments</li><li><b>Calendar:</b> colour-coded workload and bills due</li><li><b>Insights:</b> budgets, spending and a 30-day cash forecast</li><li><b>Private and offline:</b> your data stays on this device</li></ul></div><div class=card><small>Developed by</small><br><b>Kirabo Isa Bilal</b><br><small>Version 1.0</small></div><h3>Data</h3><button onclick="if(confirm('Erase ALL data on this device?')){localStorage.removeItem(K);location.reload()}">Erase everything</button>`}};
+ <h3>Opening balances</h3><div class=card><small>Set what you hold in each account right now.</small>${S.acc.map(a=>`<label>${a.id} (UGX)<input inputmode=decimal value="${a.b}" onchange="setBal('${a.id}',this.value)"></label>`).join('')}</div><h3>Backup</h3><div class=card><small>Everything lives on this device only. Last backup: ${bkTxt()}</small><div class=row style="justify-content:flex-start"><button class=p onclick=bak()>Export backup</button><button onclick="$('#imp').click()">Restore</button></div><input id=imp type=file accept=.json hidden onchange=imp(this)><small>Restore accepts backups from this web app and JSON backups from the Android app.</small></div>
+ <h3>About KiraVault</h3><div class=card style="text-align:center"><img src=icon-192.png width=64 height=64 style="border-radius:16px"><br><b style="font-size:18px">KiraVault</b><br><small>Plan, Work, Grow: your finances and work in one place.</small></div><div class=card><small>KiraVault answers one question: <b>how much can I safely spend?</b> It tracks Bank, Mobile Money and Cash, counts bills, debts and savings as commitments, and never counts client money until it is actually received.</small><ul><li><b>Finance:</b> accounts, transactions, bills &amp; debts and savings goals</li><li><b>Work:</b> projects, tasks, clients and payments</li><li><b>Calendar:</b> colour-coded workload and bills due</li><li><b>Insights:</b> budgets, spending and a 30-day cash forecast</li><li><b>Private and offline:</b> your data stays on this device</li></ul></div><div class=card><small>Developed by</small><br><b>Kirabo Isa Bilal</b><br><small>Version 1.1</small></div><h3>Data</h3><button onclick="if(confirm('Erase ALL data on this device?')){localStorage.removeItem(K);localStorage.removeItem(LK);localStorage.removeItem(FK);location.reload()}">Erase everything</button>`}};
 function setBal(n,v){acc(n).b=pa(v);save()}
-V.mo=V.money;V.money=()=>{const[a,t]=V.mo().split('<h3>Transactions</h3>'),M={a:'Overview',t:'History',b:'Bills & Debts',s:'Savings'};
- return`<div class=tabs style="flex-wrap:wrap">${Object.entries(M).map(([k,v])=>`<button class="s ${mv==k?'on':''}" onclick="mv='${k}';render()">${v}</button>`).join('')}</div>`+(mv=='a'?V.ov():mv=='t'?`<div class=top><h3>History</h3><button class=p onclick="txForm()">+ Add</button></div>`+t:mv=='b'?V.bills():V.sav())};
+V.mo=V.money;V.money=()=>{const M={a:'Overview',t:'History',p:'Plan Month',b:'Bills & Debts',s:'Savings'};
+ return`<div class=tabs style="flex-wrap:wrap">${Object.entries(M).map(([k,v])=>`<button class="s ${mv==k?'on':''}" onclick="mv='${k}';render()">${v}</button>`).join('')}</div>`+(mv=='a'?V.ov():mv=='t'?V.hist():mv=='p'?V.plan():mv=='b'?V.bills():V.sav())};
 const p_=i=>S.pr.find(p=>p.id==i),DONE=['Completed','Cancelled'],ST=['Pending','Started','In Progress','Review','Completed','Cancelled'],SC={Pending:'muted',Started:'blue','In Progress':'pu',Review:'amber',Completed:'green',Cancelled:'muted'},
  late=p=>!DONE.includes(p.st)&&p.dl&&p.dl<td(),pcol=p=>late(p)?'red':SC[p.st]||'accent',DL={"High": 0.6, "Medium": 0.4, "Low": 0.25},
  pcard=p=>{const c=pcol(p);return C(c,'',`<div class=top><b>${E(p.title)}</b><b style="color:var(--${c})">${p.pg}%</b></div><small>${[p.client,p.wt,p.st].filter(Boolean).map(E).join('  |  ')}</small><div class=bar><i style="width:${p.pg}%;background:var(--${c})"></i></div>${p.src!='Job'?`<small>UGX ${F(p.amt)}  |  Paid ${F(paid(p))}</small><br>`:''}${p.dl?`<small class="${late(p)?'r':''}">${late(p)?'OVERDUE  ':'Due '}${p.dl}</small>`:''}`,`onclick="pj=${p.id};render()"`)};
@@ -116,14 +120,14 @@ function pdet(p){const c=pcol(p),o=Math.max(p.amt-paid(p),0),dn=p.tk.filter(t=>t
  C(c,'',`<b style="font-size:20px">${E(p.title)}</b><br><small>${[p.client,p.wt,p.src,p.pri+' priority'].filter(Boolean).map(E).join('  |  ')}</small><br><b style="color:var(--${c});font-size:13px">${p.st=='Cancelled'?'Cancelled at '+p.pg+'%':p.pg+'% complete'}</b><div class=bar><i style="width:${p.pg}%;background:var(--${c})"></i></div><input type=range min=0 max=100 step=5 value=${p.pg} onchange="p_(${p.id}).pg=+this.value;save()">`+
   (p.src!='Job'?rw('Quoted','UGX '+F(p.amt))+rw('Paid',`<span class=g>UGX ${F(paid(p))}</span>`)+rw('<b>Outstanding</b>',`<b class="${o?'r':''}">UGX ${F(o)}</b>`):'')+rw('Start / Deadline',`${p.s0||'-'} / ${p.dl||'-'}`)+(p.est?rw('Estimated effort',`${p.est} days (${(p.est*(1-p.pg/100)).toFixed(1)} left)`):''))+
  `<div class=tabs style="flex-wrap:wrap">${ST.map(s=>`<button class="s ${p.st==s?'on':''}" onclick="stS(${p.id},'${s}')">${s}</button>`).join('')}</div><div class=row style="justify-content:flex-start;margin:0 0 10px"><button class="s p" onclick="projForm(${p.id})">Edit</button>${p.src!='Job'?`<button class=s onclick="payP(p_(${p.id}))">Add payment</button>`:''}<button class=s onclick="delP(${p.id})">Delete</button></div>`+
- C('pu','',H(`Tasks ${dn}/${p.tk.length} done`,'pu')+p.tk.map(t=>`<div class=top style="margin-top:6px;gap:6px"><button style="flex:1;text-align:left;${t.d?'background:var(--gb);color:var(--muted)':''}" onclick="tg(${p.id},${t.id})">${t.d?'☑':'☐'} ${E(t.t)}</button><button class=s onclick="if(confirm('Delete task?')){p_(${p.id}).tk=p_(${p.id}).tk.filter(x=>x.id!=${t.id});save()}">✕</button></div>`).join('')+`<div style="margin-top:8px"><button class=s onclick="addT(${p.id})">+ Add task</button></div>`)+
+ C('pu','',H(`Tasks ${dn}/${p.tk.length} done`,'pu')+p.tk.map(t=>`<div class=top style="margin-top:6px;gap:6px"><button style="flex:1;text-align:left;${t.d?'background:var(--gb);color:var(--muted)':''}" onclick="tg(${p.id},${t.id})">${t.d?'☑':'☐'} ${E(t.t)}</button><button class=s onclick="UD('Task deleted',()=>{p_(${p.id}).tk=p_(${p.id}).tk.filter(x=>x.id!=${t.id})})">✕</button></div>`).join('')+`<div style="margin-top:8px"><button class=s onclick="addT(${p.id})">+ Add task</button></div>`)+
  (p.src!='Job'?C('green','',H('Payments','green')+(p.pay.map(y=>`<div class=top style="margin-top:6px;gap:6px"><span class=g style="flex:1;background:var(--gb);border-radius:10px;padding:9px 12px">${y.date}   UGX ${F(y.amt)}</span><button class=s onclick="delPay(${p.id},${y.id})">✕</button></div>`).join('')||'<br><small>No payments recorded yet.</small>')):'')}
 function projForm(i){const p=i?p_(i):{};ask(i?'Edit project':'New project',[{k:'title',l:'Project',v:p.title},{k:'client',l:'Client',v:p.client=='No client'?'':p.client},{k:'amt',l:'Amount quoted (UGX)',m:1,v:p.amt},{k:'src',l:'Type',o:['Freelance','Job'],v:p.src},{k:'pri',l:'Priority',o:['High','Medium','Low'],v:p.pri||'Medium'},{k:'s0',l:'Start date',t:'date',v:p.s0},{k:'dl',l:'Deadline',t:'date',v:p.dl},{k:'est',l:'Estimated effort in days (optional)',m:1,v:p.est}],f=>{if(!f.title)return'Give the project a name';const q={title:f.title,client:f.client||'No client',amt:pa(f.amt),src:f.src,pri:f.pri,s0:f.s0,dl:f.dl,est:+f.est||0};if(i)Object.assign(p,q);else S.pr.push({id:id(),st:'Pending',pg:0,tk:[],pay:[],wt:'',...q});save()})}
 function stS(i,s){const p=p_(i);p.st=s;if(s=='Completed')p.pg=100;save()}
 function tg(i,t){const k=p_(i).tk.find(x=>x.id==t);k.d=!k.d;save()}
 function addT(i){ask('New task',[{k:'t',l:'Task'}],f=>{if(!f.t)return'Enter a task';p_(i).tk.push({id:id(),t:f.t,d:false});save()})}
-function delPay(i,y){if(!confirm('Delete this payment?'))return;const p=p_(i),t=S.tx.find(x=>x.pid==i&&x.pp==y);if(t)delTx(t);else p.pay=p.pay.filter(x=>x.id!=y);save()}
-function delP(i){if(confirm('Delete this project with its tasks and payments?')){S.pr=S.pr.filter(p=>p.id!=i);pj=null;save()}}
+function delPay(i,y){UD('Payment deleted',()=>{const p=p_(i),t=S.tx.find(x=>x.pid==i&&x.pp==y);if(t)delTx(t);else p.pay=p.pay.filter(x=>x.id!=y)})}
+function delP(i){UD('Project deleted',()=>{S.pr=S.pr.filter(p=>p.id!=i);pj=null})}
 function quickAdd(){ask('Quick add',[{k:'t',l:'Type it, e.g. spent 25k on lunch cash, or received 500k client bank'}],f=>{if(!/\d/.test(f.t))return'Include an amount, e.g. spent 25k on lunch cash';qk({t:{value:f.t}})})}
 function ld(){const t=td(),sp=[];S.pr.forEach(p=>{if(DONE.includes(p.st))return;let a=p.s0||p.dl,b=p.dl||p.s0;if(!a||!b)return;if(a>b)[a,b]=[b,a];if(b<t)b=t;const n=(x,y)=>Math.round((new Date(y)-new Date(x))/864e5)+1;let tr,rr;if(p.est){tr=Math.min(p.est/n(a,b),1);rr=Math.min(p.est*(1-p.pg/100)/n(a>t?a:t,b),1)}else tr=rr={"High": 0.6, "Medium": 0.4, "Low": 0.25}[p.pri]||.4;sp.push([a,b,tr,rr,p])});
  return d=>{const x=sp.filter(([a,b])=>a<=d&&d<=b);return[x.reduce((s,y)=>s+(d<t?y[2]:y[3]),0),x.map(y=>y[4])]}}
@@ -156,7 +160,7 @@ V.ov=()=>{const s=sm(),hs=hist(30),ch=hs[29]-hs[0],AC2={Bank:'blue','Mobile Mone
  return C('blue','',H('Total available','blue')+BG('text','UGX '+F(s.av),30)+`<small class="${ch>=0?'g':'r'}">${ch>=0?'▲':'▼'} UGX ${sh(Math.abs(ch))} in the last 30 days</small>`+ln(hs,'blue'))
  +C('amber','',H('My accounts','amber')+`<div style="display:flex;gap:12px;align-items:center;margin-top:8px">${dn(a)}<div style="flex:1">${S.acc.map(x=>`<div onclick="setB('${x.id}')" style="cursor:pointer;margin:7px 0"><div class=top><small><span style="color:var(--${AC2[x.id]||'accent'})">●</span> ${x.id}</small><b class="${x.b<0?'r':''}">${F(x.b)}</b></div></div>`).join('')}</div></div><small>Tap an account to set its balance</small>`)
  +`<button class=p style="width:100%;margin-bottom:10px;padding:13px" onclick=xfer()>⇄ Transfer money</button>`
- +C('teal','tb',H('Expected income (not yet available)','teal')+(S.ex.map(x=>`<div class=row2><div><b>${E(x.project||x.client||x.src)}</b><small>${E(x.client)} · ${x.dt||'no date'}</small></div><div class=rt><b class=g>${F(x.amt)}</b><br><button class="s p" onclick="recv(${x.id})">Received</button> <button class=s onclick="S.ex=S.ex.filter(e=>e.id!=${x.id});save()">✕</button></div></div>`).join('')||'<small>Nothing expected. Add unpaid gigs here so they don\'t inflate your balance.</small>')+'<div style="margin-top:10px"><button class="s p" onclick=addX()>+ Expected income</button></div>')
+ +riCard()+C('teal','tb',H('Expected income (not yet available)','teal')+(S.ex.map(x=>`<div class=row2><div><b>${E(x.project||x.client||x.src)}</b><small>${E(x.client)} · ${x.dt||'no date'}</small></div><div class=rt><b class=g>${F(x.amt)}</b><br><button class="s p" onclick="recv(${x.id})">Received</button> <button class=s onclick="UD('Expected income removed',()=>{S.ex=S.ex.filter(e=>e.id!=${x.id})})">✕</button></div></div>`).join('')||'<small>Nothing expected. Add unpaid gigs here so they don\'t inflate your balance.</small>')+'<div style="margin-top:10px"><button class="s p" onclick=addX()>+ Expected income</button></div>')
  +C('green','gb',H('This month','green')+bars([m.i,m.e,m.s],'green',['Income','Spent','Saved'])+mi.map(t=>`<div class=top style="margin-top:6px"><small>${t.date.slice(5)} ${E(t.desc||t.cat)}</small><b class=g>+${F(t.amt)}</b></div>`).join('')||'')
  +C('pu','',H('Recent activity','pu')+(S.tx.slice(0,5).map(t=>`<div class=top style="margin-top:6px"><small>${E(t.desc||t.cat||t.type)}</small><b class="${t.type=='income'?'g':''}">${t.type=='income'?'+':'−'}${F(t.amt)}</b></div>`).join('')||'<br><small>No transactions yet.</small>'))};
 V.ins=()=>{const ym=ym0(im),[Y,M]=ym.split('-').map(Number),n=new Date(Y,M,0).getDate(),cur=im==0,dn_=cur?new Date().getDate():n,m=mtot(ym),pm=mtot(ym0(im-1)),ex=m.t.filter(x=>x.type=='expense'),cs=gp(ex,x=>x.cat||'Others'),inc=gp(m.t.filter(x=>x.type=='income'),x=>x.cat||'Other'),day=Array(n).fill(0),wd=Array(7).fill(0),s=sm(),bn=Object.entries(S.bd),cat=Object.fromEntries(cs);
@@ -165,14 +169,14 @@ V.ins=()=>{const ym=ym0(im),[Y,M]=ym.split('-').map(Number),n=new Date(Y,M,0).ge
  ms=[...Array(6)].map((_,k)=>[ym0(k-5-(-im)).slice(5),mtot(ym0(k-5+im))]),mm=Math.max(1,...ms.flatMap(([,x])=>[x.i,x.e])),
  msg=cur?[...(od.length?[[`${od.length} bill${od.length>1?'s':''} overdue (UGX ${F(od.reduce((a,c)=>a+rem(c),0))})`,'r']]:[]),...(s.short?[[`Short by UGX ${F(s.short)} for this month's commitments`,'r']]:[]),...bn.filter(([k,l])=>(cat[k]||0)>=l*.8).map(([k,l])=>[(cat[k]||0)>=l?`Over your ${k} budget`:`Approaching your ${k} budget`,(cat[k]||0)>=l?'r':'a']),...(m.i&&m.e>m.i?[['You have spent more than you earned this month','a']]:m.i>m.e?[[`You are UGX ${F(m.i-m.e)} ahead this month`,'g']]:[]),...(s.pw?[[`UGX ${F(s.pw)} still to collect from clients`,'g']]:[])]:[],
  fe=[];S.cm.filter(c=>c.st=='pending'&&c.due&&dd(c.due)<=30).forEach(c=>fe.push([c.due<td()?td():c.due,c.title,-rem(c)]));S.ex.filter(x=>x.dt&&dd(x.dt)<=30).forEach(x=>fe.push([x.dt<td()?td():x.dt,(x.project||x.client)+' (expected)',x.amt]));S.pr.filter(p=>p.dl&&p.src!='Job'&&p.st!='Cancelled'&&p.amt>paid(p)&&dd(p.dl)<=30).forEach(p=>fe.push([p.dl<td()?td():p.dl,p.title+' (client)',p.amt-paid(p)]));
- fe.sort((a,b)=>a[0]<b[0]?-1:1);let r=s.av,lo=r;const pd=d=>new Date(d+'T00:00').toLocaleDateString('en',{day:'numeric',month:'short'}),fc=fe.map(([d,l,v])=>{r+=v;lo=Math.min(lo,r);return`<div class=top style="padding:7px 0;border-bottom:1px solid var(--line)"><small>${pd(d)}  ${E(l)}</small><span><span class="${v<0?'r':'g'}">${v>0?'+':'−'}${sh(Math.abs(v))}</span>  <b class="${r<0?'r':''}">${sh(r)}</b></span></div>`}).join(''),
+ riOcc(30).forEach(o=>fe.push([o.date<td()?td():o.date,o.title+' (recurring)',o.amt]));fe.sort((a,b)=>a[0]<b[0]?-1:1);let r=s.av,lo=r;const pd=d=>new Date(d+'T00:00').toLocaleDateString('en',{day:'numeric',month:'short'}),fc=fe.map(([d,l,v])=>{r+=v;lo=Math.min(lo,r);return`<div class=top style="padding:7px 0;border-bottom:1px solid var(--line)"><small>${pd(d)}  ${E(l)}</small><span><span class="${v<0?'r':'g'}">${v>0?'+':'−'}${sh(Math.abs(v))}</span>  <b class="${r<0?'r':''}">${sh(r)}</b></span></div>`}).join(''),
  cl={};S.pr.filter(p=>p.src!='Job'&&p.st!='Cancelled').forEach(p=>{const c=cl[p.client]||(cl[p.client]=[0,0]);c[0]+=p.amt;c[1]+=paid(p)});const cle=Object.entries(cl).sort((a,b)=>b[1][0]-a[1][0]).slice(0,6),tb=cle.reduce((a,[,c])=>a+c[0],0),tp=cle.reduce((a,[,c])=>a+c[1],0),
  sc={};S.pr.forEach(p=>sc[p.st]=(sc[p.st]||0)+1);
  return`<div class=top><button class=s onclick="im--;render()">‹</button><h1 style="margin:0">Insights · ${new Date(Y,M-1,1).toLocaleString('en',{month:'long',year:'numeric'})}</h1><button class=s onclick="im=Math.min(im+1,0);render()">›</button></div><div style="height:10px"></div>
  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${C('green','gb',H('Income','green')+BG('green',sh(m.i),18)+vs(m.i,pm.i,1))}${C('red','rb',H('Spent','red')+BG('red',sh(m.e),18)+vs(m.e,pm.e,0))}${C('blue','',H('Saved','blue')+BG('blue',sh(m.s),18)+vs(m.s,pm.s,1))}</div>`
  +(msg.length?C('accent','',H('Assistant','accent')+msg.map(([t,k])=>`<div class="${k}" style="margin-top:6px"><b>${E(t)}</b></div>`).join('')):'')
  +C('teal','tb',H('Key figures','teal')+[['Savings rate',m.i?Math.round(m.s/m.i*100)+'%':'-'],['Average spend per day','UGX '+sh(avg)],['Cash runway',avg?Math.floor(s.av/avg)+' days':'-'],cur?['Projected month spend','UGX '+sh(avg*n)]:['Transactions',m.t.length],['Biggest category',cs[0]?cs[0][0]:'-']].map(([a,b])=>`<div class=top style="margin-top:6px"><small>${a}</small><b>${b}</b></div>`).join(''))
- +C('amber','ab',H('Budget','amber')+(bn.map(([k,l])=>{const u=cat[k]||0,fr=u/l,c=fr>=1?'red':fr>=.8?'amber':'green';return`<div style="margin-top:10px"><div class=top><b>${k}</b><b style="color:var(--${c})">${sh(u)} / ${sh(l)}</b></div><div class=bar><i style="width:${Math.min(fr,1)*100}%;background:var(--${c})"></i></div>${fr>=1?'<small class=r>Over budget</small>':fr>=.8?'<small class=a>Approaching limit</small>':''} <small onclick="delete S.bd['${k}'];save()" style="cursor:pointer;float:right">remove</small></div>`}).join('')||'<br><small>Set category budgets to see how close you are to each limit.</small>')+'<div style="margin-top:10px"><button class=s onclick=bud()>Set a budget</button></div>')
+ +C('amber','ab',H('Budget','amber')+(bn.map(([k,l])=>{const u=cat[k]||0,fr=u/l,c=fr>=1?'red':fr>=.8?'amber':'green';return`<div style="margin-top:10px"><div class=top><b>${k}</b><b style="color:var(--${c})">${sh(u)} / ${sh(l)}</b></div><div class=bar><i style="width:${Math.min(fr,1)*100}%;background:var(--${c})"></i></div>${fr>=1?'<small class=r>Over budget</small>':fr>=.8?'<small class=a>Approaching limit</small>':''} <small onclick="UD('Budget removed',()=>{delete S.bd['${k}']})" style="cursor:pointer;float:right">remove</small></div>`}).join('')||'<br><small>Set category budgets to see how close you are to each limit.</small>')+'<div style="margin-top:10px"><button class=s onclick=bud()>Set a budget</button></div>')
  +C('pu','pb',H('Where your money goes','pu')+dc(cs.slice(0,6).map(([k,v],i)=>[k,v,PAL[i]])))
  +C('blue','',H('Daily spending','blue')+bars(day,'blue',null,pk)+`<small>Average UGX ${sh(avg)}/day${pk>=0?` · peak: day ${pk+1} (UGX ${sh(day[pk])})`:''}</small>`)
  +C('amber','',H('Spending by weekday','amber')+bars(wd,'amber',WN,m.e?wm:-1)+(m.e?`<small>You spend most on <b>${WN[wm]}s</b></small>`:''))
@@ -185,9 +189,8 @@ V.ins=()=>{const ym=ym0(im),[Y,M]=ym.split('-').map(Number),n=new Date(Y,M,0).ge
  +C(lo<0?'red':'teal',lo<0?'rb':'tb',H('Cash-flow forecast (30 days)',lo<0?'red':'teal')+`<div class=top style="padding:7px 0;border-bottom:1px solid var(--line)"><small>Today</small><b>${sh(s.av)}</b></div>`+(fc||'<small>Nothing due in the next 30 days</small>')+`<p style="margin:10px 0 0"><b class="${lo<0?'r':'g'}">Lowest projected balance: UGX ${sh(lo)}</b></p>`+(lo<0?'<small class=r>You may not have enough to cover everything coming up.</small>':''))};
 function addG(){ask('New savings goal',[{k:'name',l:'Goal (e.g. New Camera)'},{k:'t',l:'Target amount',m:1},{k:'mo',l:'Monthly target (optional)',m:1}],f=>{const t=pa(f.t);if(!f.name||!t)return'Enter a name and target';S.gl.push({id:id(),name:f.name,target:t,saved:0,mo:pa(f.mo)});save()})}
 function saveG(i){const g=S.gl.find(x=>x.id==i);ask('Save toward '+E(g.name),[{k:'amt',l:'Amount',m:1},{k:'acc',l:'From',o:AN(),v:'Mobile Money'},{k:'st',l:'Did you save it?',o:['Yes, saved','Not yet (pending)']}],f=>{const a=pa(f.amt);if(!a)return'Enter a valid amount';if(f.st[0]=='N'){(g.pd=g.pd||[]).push({id:id(),amt:a,acc:f.acc,date:td()});save();return}if(acc(f.acc).b<a)return`${f.acc} only has UGX ${F(acc(f.acc).b)}`;addTx('saving',a,f.acc,'Savings',g.name,td(),{gid:g.id});g.saved+=a;save()})}
-function delG(i){if(confirm('Delete this goal?')){S.gl=S.gl.filter(x=>x.id!=i);save()}}
+function delG(i){UD('Goal deleted',()=>{S.gl=S.gl.filter(x=>x.id!=i)})}
 function setB(n){ask('Set '+n+' balance',[{k:'b',l:'Current balance',v:acc(n).b,m:1}],f=>{const v=pa(f.b);if(isNaN(v)||f.b==='')return'Enter a number';acc(n).b=v;save()})}
-function bak(){S.bk=td();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download=`kiravault-${td()}.json`;a.click();save()}
 function imp(i){const r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!confirm('Replace all current data with this backup?'))return;
  if(d.accounts){const nm={};d.accounts.forEach(a=>nm[a.id]=a.name);const cn={};(d.clients||[]).forEach(c=>cn[c.id]=c.name);
   d={n:100000,acc:d.accounts.map(a=>({id:a.name,b:a.balance})),tx:d.transactions.map(t=>({id:t.id,type:t.type,amt:t.amount,acc:nm[t.account_id],to:nm[t.transfer_to],cat:t.category||t.source,desc:t.description,date:t.date,cid:t.commitment_id,gid:t.goal_id})).sort((a,b)=>b.date<a.date?-1:1),
@@ -196,5 +199,210 @@ function imp(i){const r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.re
  if(!d.acc)throw 0;S=d;mig();save()}catch{alert('That file is not a KiraVault backup')}};r.readAsText(i.files[0])}
 function go(t){tab=t;render();scrollTo(0,0)}
 function render(){theme();$('#nav').innerHTML=Object.entries(T).map(([k,v])=>`<button class="${k==tab?'on':''}" onclick="go('${k}')"><b>${IC[k]}</b>${v}</button>`).join('');$('#m').innerHTML=V[tab]()}
-if(sessionStorage.s)sp.remove();render();matchMedia('(prefers-color-scheme:dark)').onchange=theme;if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+/* ===== v6 additions ===== */
+const LK='kiravault.web.lock',FK='kiravault.web.fail',INCS=['Salary','Freelance','Business','Gift','Other'],
+ SRC={salary:'Salary',freelance:'Freelance',client:'Freelance',gig:'Freelance',business:'Business',gift:'Gift'},
+ STOPRE=/^(spent|spend|paid|pay|bought|buy|purchased|gave|received|receive|got|earned|deposit|deposited|on|for|from|via|using|with|by|to|the|a|an|my|in|at|into|of|me|i|ugx|shs|today|yesterday)$/,
+ dim=(y,m)=>new Date(y,m+1,0).getDate(),
+ fm=d=>new Date(d+'T00:00').toLocaleDateString('en',{day:'numeric',month:'short'});
+
+/* ---------- Undo (snapshot based, like the Android app) ---------- */
+let tmr;
+function hideT(){clearTimeout(tmr);const t=$('#toast');if(t)t.hidden=true}
+function showT(msg,undo){const t=$('#toast');t.innerHTML='';const s=document.createElement('span');s.textContent=msg;const b=document.createElement('button');b.textContent='Undo';b.className='p s';b.onclick=()=>{hideT();undo()};t.append(s,b);t.hidden=false;tmr=setTimeout(hideT,8000)}
+function UD(msg,fn){const snap=JSON.stringify(S);fn();save();showT(msg,()=>{const set=S.set;S=JSON.parse(snap);S.set=set;mig();save()})}
+
+/* ---------- Backup reminder + persistent storage ---------- */
+let pst=null;
+const bkAge=()=>S.bk?-dd(S.bk):null,
+ bkTxt=()=>{const a=bkAge();return a===null?'never':a<=0?'today':a==1?'yesterday':a+' days ago'},
+ hasData=()=>S.tx.length||S.cm.length||S.pr.length||S.gl.length;
+async function persist(ask){try{if(navigator.storage&&navigator.storage.persisted){pst=await navigator.storage.persisted();if(!pst&&ask&&navigator.storage.persist)pst=await navigator.storage.persist()}}catch(e){}if(tab=='more')render()}
+function bkBanner(){const a=bkAge();
+ if(hasData()&&(a===null||a>=7))return C('amber','ab',H('Back up your data','amber')+`<b style="display:block;font-size:16px;margin:4px 0">${a===null?'You have never backed up':'Last backup '+a+' days ago, back up now'}</b><small>Everything lives in this browser. Clearing site data or losing this phone erases it.</small><div class=row style="justify-content:flex-start"><button class=p onclick=bak()>Back up now</button></div>`);
+ return C('green','gb',H('Backup','green')+`<b style="display:block;font-size:16px;margin-top:4px">Last backup ${bkTxt()}</b>`)}
+async function bak(force){const name=`kiravault-${td()}.json`,text=JSON.stringify({...S,bk:td()}),f=new File([text],name,{type:'application/json'});
+ try{if(!force&&navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:'KiraVault backup'});else dl(name,text,'application/json')}
+ catch(e){if(e&&e.name=='AbortError')return;dl(name,text,'application/json')}
+ S.bk=td();save()}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
+const pstTxt=()=>pst===true?'<small class=g><b>✓ Protected.</b> This browser has marked KiraVault data as persistent, so it will not be cleared automatically when the phone runs low on space.</small>':pst===false?'<small class=a><b>Not protected yet.</b> The browser may clear this data when space runs low. Add KiraVault to your home screen, then ask again.</small><div class=row style="justify-content:flex-start"><button class=s onclick="persist(1)">Ask browser to protect my data</button></div>':'<small>This browser cannot mark storage as persistent. Keep regular backups.</small>';
+
+/* ---------- Needs attention extras ---------- */
+function extraAt(){const o=[],a=bkAge();
+ riOcc(0).forEach(x=>o.push([`${x.title} (${sh(x.amt)}) ${x.date<td()?'was expected '+fm(x.date):'is expected today'}: tap when received`,'g',`riRecv(${x.r.id},'${x.ym}')`]));
+ S.ex.filter(x=>x.dt&&x.dt<=td()).forEach(x=>o.push([`${x.project||x.client||'Expected income'} ${x.dt<td()?'was expected '+fm(x.dt):'is expected today'}: tap when received`,'g',`recv(${x.id})`]));
+ if(hasData()&&(a===null||a>=7))o.push([a===null?'You have never backed up your data':`Last backup ${a} days ago, back up now`,'a',"go('more')"]);
+ return o}
+
+/* ---------- Edit / delete transactions ---------- */
+function txMenu(i){const t=S.tx.find(x=>x.id==i);if(!t)return;const d=$('#dlg');
+ d.innerHTML=`<h3>${E(t.desc||t.cat||t.type)}</h3><small>${t.date} · ${E(t.acc)}${t.type=='transfer'?' → '+E(t.to):''} · UGX ${F(t.amt)}</small><div class=row style="justify-content:flex-start;flex-wrap:wrap"><button class=p onclick="dlg.close();editTx(${i})">Edit</button><button onclick="dlg.close();UD('Transaction deleted',()=>{const x=S.tx.find(x=>x.id==${i});if(x)delTx(x)})">Delete</button><button onclick=dlg.close()>Cancel</button></div>`;d.showModal()}
+function editTx(i){const t=S.tx.find(x=>x.id==i);if(!t)return;
+ const tr=t.type=='transfer',lk=!!(t.cid||t.gid||t.pid),free=!tr&&!lk&&(t.type=='expense'||t.type=='income'),co=[...CATS,'Salary','Freelance','Business','Gift','Other'];
+ if(t.cat&&!co.includes(t.cat))co.unshift(t.cat);
+ ask('Edit transaction',[...(free?[{k:'type',l:'Type',o:['expense','income'],v:t.type}]:[]),{k:'amt',l:'Amount (25k, 1.5m, 150,000)',v:t.amt,m:1},...(tr?[]:[{k:'acc',l:'Account',o:AN(),v:t.acc}]),...(tr||t.type=='saving'?[]:[{k:'cat',l:'Category (expense) / source (income)',o:co,v:t.cat}]),{k:'desc',l:'Note',v:t.desc},{k:'date',l:'Date',t:'date',v:t.date}],f=>{
+  const a=pa(f.amt);if(!a)return'Enter a valid amount';
+  const nt=free?f.type:t.type,na=tr?t.acc:f.acc,ef=(y,m)=>y=='income'?m:-m,B={};
+  S.acc.forEach(x=>B[x.id]=x.b);B[t.acc]-=ef(t.type,t.amt);if(tr)B[t.to]-=t.amt;
+  const av=B[na];B[na]+=ef(nt,a);if(tr)B[t.to]+=a;
+  if(nt!='income'&&B[na]<0&&B[na]<acc(na).b)return`${na} only has UGX ${F(Math.max(av,0))}`;
+  if(t.cid){const c=S.cm.find(x=>x.id==t.cid);if(c&&c.paid-t.amt+a>c.amt+.5)return`This bill is only UGX ${F(c.amt-c.paid+t.amt)}`}
+  S.acc.forEach(x=>x.b=B[x.id]);const df=a-t.amt;
+  if(t.cid){const c=S.cm.find(x=>x.id==t.cid);if(c){c.paid=Math.max(c.paid+df,0);c.st=c.paid>=c.amt-.5?'paid':'pending'}}
+  if(t.gid){const g=g_(t.gid);if(g)g.saved=Math.max(g.saved+df,0)}
+  if(t.pid){const p=p_(t.pid),y=p&&p.pay.find(x=>x.id==t.pp);if(y)y.amt=a}
+  Object.assign(t,{type:nt,amt:a,acc:na,desc:f.desc,date:f.date||t.date});
+  if(!tr&&t.type!='saving'&&f.cat)t.cat=f.cat;
+  learn(f.desc,t.cat,t.type);save()})}
+
+/* ---------- Smarter quick add: remember corrections ---------- */
+const norm=s=>(String(s||'').toLowerCase().match(/[a-z']+/g)||[]).filter(w=>!STOPRE.test(w));
+function gs(D,inc){const ok=c=>c&&(inc?INCS.includes(c):CATS.includes(c)),ph=D.join(' ');let c=S.cr[ph];if(ok(c))return c;c=D.map(w=>S.cr[w]).find(ok);if(c)return c;
+ return inc?(D.map(w=>SRC[w]).find(Boolean)||'Other'):(D.map(w=>Object.keys(CW).find(k=>CW[k].split(' ').includes(w))).find(Boolean)||'Others')}
+function learn(desc,cat,type){if(type!='expense'&&type!='income')return;const D=norm(desc);if(!D.length||!cat)return;
+ const keys=[D.join(' ')];if(D.length<=2)keys.push(...D.filter(w=>w.length>2));
+ keys.forEach(k=>{if(cat=='Others'||cat=='Other')delete S.cr[k];else S.cr[k]=cat});
+ const ks=Object.keys(S.cr);if(ks.length>300)ks.slice(0,ks.length-300).forEach(k=>delete S.cr[k])}
+function forgetR(k){UD('Forgot "'+k+'"',()=>{delete S.cr[k]})}
+function memCard(){const e=Object.entries(S.cr);return`<h3>Quick add memory</h3><div class=card><small>${e.length?'KiraVault remembers the category you pick, so the same words land there next time.':'When you pick a category after a quick add, KiraVault remembers it (for example rolex → Food).'}</small>${e.slice(-15).reverse().map(([k,v])=>`<div class=top style="margin-top:6px"><small>${E(k)} → <b>${E(v)}</b></small><button class=s data-k="${E(k)}" onclick="forgetR(this.dataset.k)">✕</button></div>`).join('')}${e.length?`<div class=row style="justify-content:flex-start"><button class=s onclick="UD('Quick add memory cleared',()=>{S.cr={}})">Forget all (${e.length})</button></div>`:''}</div>`}
+
+/* ---------- Recurring income ---------- */
+function riDate(r,ym){const[y,m]=ym.split('-').map(Number);return`${ym}-${String(Math.min(r.day,dim(y,m-1))).padStart(2,'0')}`}
+function riOcc(days){const lim=addD(td(),days),o=[];
+ S.ri.filter(r=>r.on!==false).forEach(r=>[0,1].forEach(k=>{const ym=ym0(k),d=riDate(r,ym);
+  if(d<=lim&&!(r.skip||[]).includes(ym)&&!S.tx.some(t=>t.ri==r.id&&t.rm==ym))o.push({r,ym,date:d,amt:r.amt,title:r.title})}));return o}
+function riForm(i){const r=i?S.ri.find(x=>x.id==i):{};
+ ask(i?'Edit recurring income':'New recurring income',[{k:'title',l:'Name (e.g. Salary)',v:r.title},{k:'amt',l:'Amount each month',m:1,v:r.amt},{k:'day',l:'Day of month it arrives (1 to 31)',t:'number',v:r.day||25},{k:'src',l:'Type',o:INCS,v:r.src||'Salary'},{k:'acc',l:'Arrives in',o:AN(),v:r.acc||'Bank'},{k:'on',l:'Active',o:['Yes','No'],v:r.on===false?'No':'Yes'}],f=>{
+  const a=pa(f.amt),d=Math.round(+f.day);if(!f.title)return'Give it a name';if(!a)return'Enter a valid amount';if(!(d>=1&&d<=31))return'Day must be between 1 and 31';
+  const q={title:f.title,amt:a,day:d,src:f.src,acc:f.acc,on:f.on=='Yes'};
+  if(i)Object.assign(r,q);else{const n=id();S.ri.push({id:n,skip:+td().slice(8)>d?[ym0(0)]:[],...q})}save()})}
+function riMenu(i){const r=S.ri.find(x=>x.id==i);if(!r)return;const d=$('#dlg');
+ d.innerHTML=`<h3>${E(r.title)}</h3><small>UGX ${F(r.amt)} on day ${r.day} of each month · ${r.on===false?'paused':'active'}</small><div class=row style="justify-content:flex-start;flex-wrap:wrap"><button class=p onclick="dlg.close();riForm(${i})">Edit</button><button onclick="dlg.close();riSkip(${i})">Skip this month</button><button onclick="dlg.close();UD('Recurring income deleted',()=>{S.ri=S.ri.filter(x=>x.id!=${i})})">Delete</button><button onclick=dlg.close()>Close</button></div>`;d.showModal()}
+function riSkip(i){const r=S.ri.find(x=>x.id==i);if(r){r.skip=[...(r.skip||[]),ym0(0)];save()}}
+function riRecv(i,ym){const r=S.ri.find(x=>x.id==i);if(!r)return;
+ ask('Received: '+r.title,[{k:'amt',l:'Amount',m:1,v:r.amt},{k:'acc',l:'Received into',o:AN(),v:acc(r.acc)?r.acc:'Bank'},{k:'date',l:'Date',t:'date',v:td()}],f=>{
+  const a=pa(f.amt);if(!a)return'Enter a valid amount';addTx('income',a,f.acc,r.src,r.title,f.date,{ri:r.id,rm:ym});save()})}
+function riCard(){if(!S.ri.length)return'';const o=riOcc(35).sort((a,b)=>a.date<b.date?-1:1);
+ return C('teal','tb',H('Recurring income','teal')+(o.map(x=>`<div class=row2><div><b>${E(x.title)}</b><small>${x.date<td()?'was due ':'expected '}${fm(x.date)}</small></div><div class=rt><b class=g>${F(x.amt)}</b><br><button class="s p" onclick="riRecv(${x.r.id},'${x.ym}')">Received</button></div></div>`).join('')||'<br><small>Nothing due in the next few weeks.</small>')+`<div style="margin-top:8px"><button class=s onclick="mv='p';render()">Manage in Plan Month</button></div>`)}
+
+/* ---------- Plan Month ---------- */
+let pmo=0;
+function cmMonth(ym,cur){const[Y,M]=ym.split('-').map(Number),f=ym+'-01',l=ym+'-'+String(dim(Y,M-1)).padStart(2,'0'),o=[];
+ S.cm.forEach(c=>{if(!c.due)return;
+  if(c.st=='paid'){if(c.due>=f&&c.due<=l)o.push({c,due:c.due,amt:c.amt,left:0,paid:1});return}
+  if(c.due>=f&&c.due<=l)o.push({c,due:c.due,amt:c.amt,left:rem(c)});
+  else if(cur&&c.due<f)o.push({c,due:c.due,amt:c.amt,left:rem(c),late:1});
+  if(c.rec=='Monthly'&&c.due<=l){let k=1,d=addM(c.due,k);while(d<f&&k<240)d=addM(c.due,++k);if(d>=f&&d<=l&&d!=c.due)o.push({c,due:d,amt:c.amt,left:c.amt,proj:1})}
+  if(c.rec=='Weekly'){let d=addD(c.due,7);while(d<f)d=addD(d,7);for(;d<=l;d=addD(d,7))o.push({c,due:d,amt:c.amt,left:c.amt,proj:1})}});
+ return o.sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0)}
+V.plan=()=>{
+ const ym=ym0(pmo),[Y,M]=ym.split('-').map(Number),n=dim(Y,M-1),f=ym+'-01',l=ym+'-'+String(n).padStart(2,'0'),cur=pmo==0,
+  lab=new Date(Y,M-1,1).toLocaleString('en',{month:'long',year:'numeric'}),
+  ri=S.ri.map(r=>{const g=S.tx.find(t=>t.ri==r.id&&t.rm==ym);return{r,got:!!g,amt:g?g.amt:r.amt,date:g?g.date:riDate(r,ym),off:!g&&(r.on===false||(r.skip||[]).includes(ym))}}).filter(x=>!x.off),
+  ex=S.ex.filter(x=>x.dt&&x.dt>=f&&x.dt<=l),
+  cl=S.pr.filter(p=>p.src!='Job'&&p.st!='Cancelled'&&p.dl&&p.dl>=f&&p.dl<=l&&p.amt>paid(p)).map(p=>({p,amt:p.amt-paid(p)})),
+  got=S.tx.filter(t=>t.type=='income'&&!t.ri&&t.date>=f&&t.date<=l),
+  bl=cmMonth(ym,cur),B=bl.filter(x=>x.c.kind!='Debt'&&x.c.kind!='Savings'),D=bl.filter(x=>x.c.kind=='Debt'),SV=bl.filter(x=>x.c.kind=='Savings'),
+  gm=S.gl.filter(g=>g.mo&&g.saved<g.target),bd=Object.entries(S.bd).filter(([k])=>!['Rent','Bills','Internet'].includes(k)),
+  sum=a=>a.reduce((s,x)=>s+x.amt,0),tin=sum(ri)+sum(ex)+sum(cl)+sum(got),tb=sum(B),tdb=sum(D),ts=sum(SV)+gm.reduce((s,g)=>s+g.mo,0),tbd=bd.reduce((s,[,v])=>s+v,0),
+  left=tin-tb-tdb-ts,after=left-tbd,still=bl.reduce((s,x)=>s+x.left,0),
+  br=x=>row(x.c.title,`${x.c.kind} · ${x.late?'overdue since ':'due '}${fm(x.due)}${x.proj?' · repeats':''}${x.paid?' · paid ✓':''}`,F(x.amt),x.paid?'g':x.late?'r':''),
+  sec=(t,c,bg,items,tot,empty,btn)=>C(c,bg,H(t,c)+`<div class=top style="margin-top:4px"><small>Planned</small><b>UGX ${F(tot)}</b></div>`+(items.join('')||`<br><small>${empty}</small>`)+(btn?`<div style="margin-top:8px">${btn}</div>`:'')),
+  pos=left>=0;
+ return`<div class=top><button class=s onclick="pmo--;render()">‹</button><h1 style="margin:0">Plan · ${lab}</h1><button class=s onclick="pmo=Math.min(pmo+1,12);render()">›</button></div><div style="height:10px"></div>`
+ +C(pos?'green':'red',pos?'gb':'rb',H(pos?'Left to spend freely':'Short by',pos?'green':'red')+BG(pos?'green':'red','UGX '+F(Math.abs(left)),34)+`<small>Planned income minus bills, debts and savings.${tbd?` After your everyday budgets (UGX ${sh(tbd)}): <b class="${after<0?'r':'g'}">${after<0?'short by ':''}UGX ${sh(Math.abs(after))}</b>.`:''}</small>${cur&&still?`<br><small>Still to pay this month: <b>UGX ${F(still)}</b></small>`:''}`)
+ +sec('Income','teal','tb',[...ri.map(x=>row(x.r.title+(x.got?' ✓':''),`${x.got?'received ':'expected '}${fm(x.date)} · every month`,'+'+F(x.amt),'g',`onclick="riMenu(${x.r.id})" style="cursor:pointer"`)),...ex.map(x=>row(x.project||x.client||x.src,`expected ${fm(x.dt)}`,'+'+F(x.amt),'g')),...cl.map(x=>row(x.p.title,`client balance · deadline ${fm(x.p.dl)}`,'+'+F(x.amt),'g')),...got.map(t=>row(t.desc||t.cat,`received ${fm(t.date)}`,'+'+F(t.amt),'g'))],tin,'No income planned yet. Add your salary or expected payments.',`<button class="s p" onclick=riForm()>+ Recurring income</button> <button class=s onclick=addX()>+ Expected income</button>`)
+ +sec('Bills','amber','ab',B.map(br),tb,'No bills due this month.','<button class="s p" onclick=addC()>+ Bill</button>')
+ +(D.length?sec('Debts','red','rb',D.map(br),tdb,''):'')
+ +sec('Savings','green','',[...SV.map(br),...gm.map(g=>row(g.name,'monthly goal target',F(g.mo)))],ts,'No savings planned. Set a monthly target on a goal.','<button class=s onclick="mv=\'s\';render()">Open savings goals</button>')
+ +(bd.length?C('pu','pb',H('Everyday budgets','pu')+`<div class=top style="margin-top:4px"><small>Planned</small><b>UGX ${F(tbd)}</b></div>`+bd.map(([k,v])=>KV(k,v)).join('')+'<small>Rent, Bills and Internet budgets are already covered by your bills above.</small>'):'')
+ +(cur?'':'<small>Future months show bills that repeat and income you have set up. One-off items appear once they have a date in that month.</small>')}
+
+/* ---------- History: search + filters ---------- */
+let hf={q:'',cat:'All',acc:'All',type:'All',from:'',to:''},hn=100;
+function hfl(){const q=hf.q.trim().toLowerCase().replace(/,/g,''),n=pa(q);
+ return S.tx.filter(t=>(hf.cat=='All'||t.cat==hf.cat)&&(hf.acc=='All'||t.acc==hf.acc||t.to==hf.acc)&&(hf.type=='All'||t.type==hf.type)&&(!hf.from||t.date>=hf.from)&&(!hf.to||t.date<=hf.to)&&(!q||(n&&t.amt==n)||[t.desc,t.cat,t.acc,t.to,t.type,t.date].some(x=>String(x??'').toLowerCase().includes(q)))).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:b.id-a.id)}
+function hlHTML(){const L=hfl(),inn=L.filter(t=>t.type=='income').reduce((s,t)=>s+t.amt,0),out=L.filter(t=>t.type=='expense'||t.type=='saving').reduce((s,t)=>s+t.amt,0);
+ return`<small>${L.length} transaction${L.length==1?'':'s'}${L.length?` · in <span class=g>+${F(inn)}</span> · out <span class=r>−${F(out)}</span>`:''}</small><div class=card style="margin-top:6px">${L.slice(0,hn).map(t=>row(t.desc||t.cat||t.type,`${t.date} · ${t.cat?t.cat+' · ':''}${t.acc}${t.type=='transfer'?' → '+t.to:''}`,(t.type=='income'?'+':t.type=='transfer'?'⇄ ':'−')+F(t.amt),t.type=='income'?'g':'',`onclick="txMenu(${t.id})" style="cursor:pointer"`)).join('')||'<small>No transactions match.</small>'}</div>${L.length>hn?`<button style="width:100%" onclick="hn+=100;hl()">Show more (${L.length-hn})</button>`:''}`}
+function hl(){const e=$('#hl');if(e)e.innerHTML=hlHTML()}
+function hclr(){hf={q:'',cat:'All',acc:'All',type:'All',from:'',to:''};hn=100;render()}
+V.hist=()=>{const cats=[...new Set(S.tx.map(t=>t.cat).filter(Boolean))].sort(),
+  sel=(k,list)=>`<select onchange="hf.${k}=this.value;hn=100;hl()">${list.map(([v,t])=>`<option value="${E(v)}"${hf[k]==v?' selected':''}>${E(t)}</option>`).join('')}</select>`,
+  on=hf.q||hf.cat!='All'||hf.acc!='All'||hf.type!='All'||hf.from||hf.to;
+ return`<div class=top><h3>History</h3><div><button class=s onclick="expTx(hfl())">⬇ CSV</button> <button class=p onclick="txForm()">+ Add</button></div></div>
+ <input type=search placeholder="Search note, category, amount…" value="${E(hf.q)}" oninput="hf.q=this.value;hn=100;hl()">
+ <div class=grid style="margin-top:8px">${sel('cat',[['All','All categories'],...cats.map(c=>[c,c])])}${sel('acc',[['All','All accounts'],...AN().map(c=>[c,c])])}${sel('type',[['All','All types'],['expense','Spending'],['income','Income'],['saving','Savings'],['transfer','Transfers']])}${on?'<button onclick=hclr()>Clear filters</button>':'<span></span>'}
+ <label style="margin:0">From<input type=date value="${hf.from}" onchange="hf.from=this.value;hn=100;hl()"></label><label style="margin:0">To<input type=date value="${hf.to}" onchange="hf.to=this.value;hn=100;hl()"></label></div>
+ <div id=hl style="margin-top:10px">${hlHTML()}</div>`};
+
+/* ---------- CSV + calendar export ---------- */
+const qc=v=>{if(typeof v=='number')return String(v);let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s},
+ csv=rows=>'\uFEFF'+rows.map(r=>r.map(qc).join(',')).join('\r\n');
+function expTx(L){if(!L.length)return alert('Nothing to export');const sg=t=>t.type=='income'?t.amt:t.type=='transfer'?0:-t.amt;
+ dl(`kiravault-transactions-${td()}.csv`,csv([['Date','Type','Account','Transfer to','Category','Note','Amount (UGX)','Net effect (UGX)'],...L.slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id).map(t=>[t.date,t.type,t.acc,t.to||'',t.cat||'',t.desc||'',t.amt,sg(t)])]),'text/csv;charset=utf-8')}
+function expCsv(){ask('Export CSV',[{k:'w',l:'What to export',o:['Transactions','Bills & debts','Projects']},{k:'a',l:'Transactions from (optional)',t:'date'},{k:'b',l:'Transactions to (optional)',t:'date'}],f=>{
+ if(f.w=='Transactions')expTx(S.tx.filter(t=>(!f.a||t.date>=f.a)&&(!f.b||t.date<=f.b)));
+ else if(f.w=='Bills & debts')dl(`kiravault-bills-${td()}.csv`,csv([['Title','Type','Amount (UGX)','Paid (UGX)','Remaining (UGX)','Due date','Repeats','Pay from','Status'],...S.cm.map(c=>[c.title,c.kind,c.amt,c.paid,c.st=='paid'?0:rem(c),c.due||'',c.rec||'None',c.acc||'',c.st])]),'text/csv;charset=utf-8');
+ else dl(`kiravault-projects-${td()}.csv`,csv([['Project','Client','Type','Status','Progress %','Quoted (UGX)','Paid (UGX)','Outstanding (UGX)','Start','Deadline'],...S.pr.map(p=>[p.title,p.client,p.src,p.st,p.pg,p.src=='Job'?0:p.amt,paid(p),p.src=='Job'?0:Math.max(p.amt-paid(p),0),p.s0||'',p.dl||''])]),'text/csv;charset=utf-8')})}
+function ics(){const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z'),t=td(),ev=[],
+  esc=s=>String(s).replace(/[\\;,]/g,m=>'\\'+m).replace(/\r?\n/g,'\\n'),dt=s=>s.replace(/-/g,''),
+  fold=s=>{let o='';while(s.length>70){o+=s.slice(0,70)+'\r\n ';s=s.slice(70)}return o+s},
+  al='BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:KiraVault reminder\r\nTRIGGER:-PT15H\r\nEND:VALARM\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:KiraVault reminder\r\nTRIGGER:PT9H\r\nEND:VALARM',
+  add=(uid,d,sm_,ds,rr)=>ev.push(['BEGIN:VEVENT','UID:'+uid+'@kiravault','DTSTAMP:'+now,'DTSTART;VALUE=DATE:'+dt(d),'DTEND;VALUE=DATE:'+dt(addD(d,1)),fold('SUMMARY:'+esc(sm_)),fold('DESCRIPTION:'+esc(ds)),...(rr?['RRULE:'+rr]:[]),al,'END:VEVENT'].join('\r\n'));
+ S.cm.filter(c=>c.st=='pending'&&c.due).forEach(c=>{let d=c.due,rr='';
+  if(c.rec=='Monthly'){rr='FREQ=MONTHLY;COUNT=12';for(let k=1;d<t&&k<240;k++)d=addM(c.due,k)}
+  else if(c.rec=='Weekly'){rr='FREQ=WEEKLY;COUNT=26';while(d<t)d=addD(d,7)}
+  else if(d<t)d=t;
+  add('bill'+c.id,d,`Bill due: ${c.title} (UGX ${F(rem(c))})`,`${c.kind}. Pay from ${c.acc||'your account'}, then record it in KiraVault.`,rr)});
+ S.pr.filter(p=>!DONE.includes(p.st)&&p.dl).forEach(p=>add('proj'+p.id,p.dl<t?t:p.dl,'Deadline: '+p.title,`${p.client||''} ${p.st}`.trim()));
+ if(!ev.length)return alert('No bills or deadlines with dates to export yet.');
+ dl('kiravault-reminders.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//KiraVault//Web//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:KiraVault',...ev,'END:VCALENDAR'].join('\r\n')+'\r\n','text/calendar;charset=utf-8')}
+
+/* ---------- PIN / biometric lock (screen lock, stored apart from your data) ---------- */
+let lkS=null;try{lkS=JSON.parse(localStorage.getItem(LK))}catch{}
+let lkB='',lkO=null,hidT=0;
+const lkSave=()=>{lkS?localStorage.setItem(LK,JSON.stringify(lkS)):localStorage.removeItem(LK)},
+ lkF=()=>{try{return JSON.parse(localStorage.getItem(FK))||{n:0,t:0}}catch{return{n:0,t:0}}},
+ lkWait=()=>Math.max(0,Math.ceil((lkF().t-Date.now())/1000)),
+ hex=a=>[...new Uint8Array(a)].map(x=>x.toString(16).padStart(2,'0')).join(''),
+ b64=a=>btoa(String.fromCharCode(...new Uint8Array(a))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),
+ ub=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0)),
+ KEYS=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+async function hp(p,salt){const b=new TextEncoder().encode(salt+':'+p);if(window.crypto&&crypto.subtle)return hex(await crypto.subtle.digest('SHA-256',b));let h=5381;for(const c of b)h=((h<<5)+h+c)|0;return String(h)}
+const chk=async p=>!!lkS&&(await hp(p,lkS.salt))==lkS.hash;
+function lkFail(){const f=lkF();f.n++;if(f.n>=5)f.t=Date.now()+Math.min(30*2**(f.n-5),600)*1000;localStorage.setItem(FK,JSON.stringify(f))}
+function pad(o){lkO=o;lkB='';const d=$('#lk');d.hidden=false;
+ d.innerHTML=`<img src=icon-192.png width=56 height=56 alt="" style="border-radius:14px"><b style="font-size:19px">${E(o.title)}</b><small id=lks>${E(o.sub||'')}</small><div id=lkd><i></i><i></i><i></i><i></i></div><div class=kp>${KEYS.map(k=>k?`<button onclick="kp('${k}')">${k}</button>`:'<span></span>').join('')}</div><div class=row style="justify-content:center;margin:0;gap:12px;flex-wrap:wrap">${o.bio?'<button onclick=bioGo()>Use fingerprint</button>':''}${o.cancel?'<button onclick=padClose()>Cancel</button>':''}${o.forgot?'<button onclick=lkForgot()>Forgot PIN?</button>':''}</div>`}
+function padClose(){lkO=null;lkB='';const d=$('#lk');d.hidden=true;d.innerHTML=''}
+function lkDots(){document.querySelectorAll('#lkd i').forEach((x,i)=>x.className=i<lkB.length?'f':'')}
+async function kp(k){if(!lkO)return;if(k=='⌫')lkB=lkB.slice(0,-1);else if(lkB.length<4)lkB+=k;lkDots();
+ if(lkB.length==4){const p=lkB,o=lkO;lkB='';const e=await o.done(p);if(e&&lkO===o){const s=$('#lks');s.textContent=e;s.style.color='var(--red)';lkDots()}}}
+function lockNow(){const d=$('#dlg');if(d.open)d.close();document.body.classList.add('locked');
+ pad({title:'KiraVault is locked',sub:'Enter your PIN',bio:!!(lkS&&lkS.cred),forgot:1,done:async p=>{const w=lkWait();if(w)return`Too many tries. Wait ${w}s`;if(await chk(p)){localStorage.removeItem(FK);unlockNow();return}lkFail();return'Wrong PIN'}});
+ if(lkS&&lkS.cred)setTimeout(bioGo,400)}
+function unlockNow(){document.body.classList.remove('locked','priv');padClose()}
+function lkForgot(){if(confirm('Forgot your PIN? The only way in is to erase the data on this device and restore a backup afterwards. Erase everything now?')){localStorage.removeItem(K);localStorage.removeItem(LK);localStorage.removeItem(FK);location.reload()}}
+function setPin(){$('#dlg').open&&$('#dlg').close();
+ pad({title:'Choose a PIN',sub:'4 digits',cancel:1,done:async p=>{
+  pad({title:'Confirm your PIN',sub:'Enter it again',cancel:1,done:async q=>{if(q!=p)return'The PINs did not match, try again';
+   const salt=hex(crypto.getRandomValues(new Uint8Array(8)));lkS={...(lkS||{}),salt,hash:await hp(p,salt)};lkSave();padClose();save()}})}})}
+function chPin(){pad({title:'Current PIN',cancel:1,done:async p=>{if(!await chk(p))return'Wrong PIN';setPin()}})}
+function offPin(){pad({title:'Enter PIN to turn off',cancel:1,done:async p=>{if(!await chk(p))return'Wrong PIN';lkS=null;lkSave();padClose();save()}})}
+async function bioOn(){try{const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'KiraVault'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'kiravault',displayName:'KiraVault'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000}});lkS.cred=b64(c.rawId);lkSave();save()}catch(e){alert('Fingerprint or face unlock could not be turned on for this browser. Your PIN still works.')}}
+function bioOff(){delete lkS.cred;lkSave();save()}
+async function bioGo(){try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:ub(lkS.cred)}],userVerification:'required',timeout:60000}});unlockNow()}catch(e){}}
+document.addEventListener('keydown',e=>{if($('#lk').hidden)return;if(/^\d$/.test(e.key))kp(e.key);else if(e.key=='Backspace')kp('⌫')});
+document.addEventListener('visibilitychange',()=>{if(!lkS)return;if(document.hidden){hidT=Date.now();document.body.classList.add('priv')}else if(Date.now()-hidT>30000)lockNow();else document.body.classList.remove('priv')});
+const lockCard=()=>`<h3>App lock</h3><div class=card><small>${lkS?'PIN lock is <b>on</b>. KiraVault asks for it when you open the app and after 30 seconds away.':'Ask for a PIN when KiraVault opens, so nobody can browse your finances if they borrow your phone.'}</small><div class=row style="justify-content:flex-start;flex-wrap:wrap">${lkS?`<button class=p onclick=chPin()>Change PIN</button><button onclick=offPin()>Turn off</button>${window.PublicKeyCredential?(lkS.cred?'<button onclick=bioOff()>Fingerprint: on</button>':'<button onclick=bioOn()>Use fingerprint / face</button>'):''}`:'<button class=p onclick=setPin()>Set a PIN</button>'}</div><small>This is a screen lock. It does not encrypt your data, so keep your backups safe.</small></div>`;
+
+/* ---------- Settings: wrap the original screen with the new sections ---------- */
+const MORE0=V.more;
+V.more=()=>MORE0()
+ .replace('<h1>Settings</h1>','<h1>Settings</h1>'+bkBanner())
+ .replace('<button class=p onclick=bak()>Export backup</button>','<button class=p onclick=bak()>Export backup</button><button onclick="bak(1)">Save as file</button>')
+ .replace('JSON backups from the Android app.</small></div>','JSON backups from the Android app.</small><hr style="border:0;border-top:1px solid var(--line);margin:12px 0">'+pstTxt()+'</div>')
+ .replace('<h3>About KiraVault</h3>',`<h3>Export and reminders</h3><div class=card><small>Open your data in Excel or Google Sheets, or send it to your accountant. Open the .ics file on your phone and choose Calendar to get bill alerts. Export it again after adding or paying bills.</small><div class=row style="justify-content:flex-start;flex-wrap:wrap"><button class=p onclick=expCsv()>⬇ Export CSV</button><button onclick=ics()>📅 Bill reminders (.ics)</button></div></div>${lockCard()}${memCard()}<h3>About KiraVault</h3>`);
+
+if(lkS)lockNow();if(sessionStorage.s)sp.remove();render();persist(1);matchMedia('(prefers-color-scheme:dark)').onchange=theme;if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
