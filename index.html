@@ -15,7 +15,9 @@ nav button{flex:1;background:none;border-radius:0;padding:14px 0;color:var(--mut
 dialog{border:0;border-radius:18px;background:var(--card);color:var(--text);width:min(92vw,420px);padding:18px}dialog::backdrop{background:#0008}.row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .bar{height:6px;background:var(--line);border-radius:4px;margin:8px 0 2px}.bar i{display:block;height:100%;background:var(--green);border-radius:4px}
 .tabs{display:flex;gap:8px;margin-bottom:10px}.tabs .on{background:var(--accent);color:#fff}.top{display:flex;justify-content:space-between;align-items:center}
-</style></head><body><main id=m></main><nav id=nav></nav><dialog id=dlg></dialog>
+nav button{font-size:12px}.gb{background:linear-gradient(#5CF0B0,#1FB36B);color:#06331f;font-weight:700;padding:14px 46px;border-radius:30px;font-size:17px}
+#sp{position:fixed;inset:0;z-index:9;background:#0a2a8f url(intro.jpg) center/cover no-repeat;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14vh}@media(min-aspect-ratio:1/1){#sp{background-size:contain}}
+</style></head><body><main id=m></main><nav id=nav></nav><dialog id=dlg></dialog><div id=sp><button class=gb onclick="sp.remove();sessionStorage.s=1">Get Started</button></div>
 <script>
 const $=s=>document.querySelector(s),K='kiravault.web.v1',E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),F=n=>Math.round(n).toLocaleString('en-US'),
  td=()=>new Date().toLocaleDateString('sv'),me=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toLocaleDateString('sv')},
@@ -27,20 +29,26 @@ const KINDS=['Rent','Internet','Electricity','Debt','Subscription','Planned Purc
  CATS=['Food','Rent','Bills','Internet','Transport','Shopping','Entertainment','Work','Others'],
  K2C={Rent:'Rent',Internet:'Internet',Electricity:'Bills',Debt:'Debt',Subscription:'Entertainment','Planned Purchase':'Shopping',Savings:'Savings','Work Expense':'Work',Other:'Others'},
  CW={Food:'lunch dinner breakfast supper food snack rolex groceries restaurant coffee tea juice meal',Transport:'boda taxi uber bolt safeboda fuel transport matatu fare parking petrol',Rent:'rent',Internet:'internet wifi data airtime',Bills:'electricity umeme water nwsc yaka bill tv',Shopping:'shopping clothes shoes shirt dress',Entertainment:'movie netflix party drinks beer game concert cinema',Work:'work equipment software tools'},
- LT={bg:'#F3F5FA',card:'#FFFFFF',text:'#1B2236',muted:'#7A8299',green:'#22A559',red:'#E5484D',amber:'#F5A524',line:'#E1E5EF'},
- DK={bg:'#0D1221',card:'#161D33',text:'#F4F6FF',muted:'#94A3C1',green:'#3FD08F',red:'#F76B6B',amber:'#FDB844',line:'#323B58'},
+ LT={bg:'#F3F5FA',card:'#FFFFFF',text:'#1B2236',muted:'#7A8299',green:'#22A559',red:'#E5484D',amber:'#F5A524',line:'#E1E5EF',blue:'#2F7BF5',gb:'#DDF5E6',rb:'#FFDADA',ab:'#FFF1D0',teal:'#0FB5A0',tb:'#D6F5F0',pu:'#8453F0',pb:'#ECE4FF'},
+ DK={bg:'#0D1221',card:'#161D33',text:'#F4F6FF',muted:'#94A3C1',green:'#3FD08F',red:'#F76B6B',amber:'#FDB844',line:'#323B58',blue:'#6AA8FF',gb:'#14403A',rb:'#3A1E2A',ab:'#3A2D12',teal:'#34D9C3',tb:'#10403F',pu:'#A78BFA',pb:'#2D2552'},
  AC={Blue:['#3D5AFE','#6673F5'],Green:['#22A559','#3FD08F'],Purple:['#7C4DFF','#A07BFF'],Orange:['#F57C00','#FFA040']};
 let S;try{S=JSON.parse(localStorage.getItem(K))}catch{}
-S=S||{n:1,acc:['Bank','Mobile Money','Cash'].map(id=>({id,b:0})),tx:[],cm:[],pr:[],set:{mode:'auto',accent:'Blue'},bk:null};
+S=S||{n:1,acc:['Bank','Mobile Money','Cash'].map(id=>({id,b:0})),tx:[],cm:[],pr:[],set:{mode:'auto',accent:'Blue'},bk:null};S.gl=S.gl||[];
 const id=()=>S.n++,save=()=>{localStorage.setItem(K,JSON.stringify(S));render()},acc=n=>S.acc.find(a=>a.id===n),rem=c=>c.amt-c.paid,
  paid=p=>p.pay.reduce((a,x)=>a+x.amt,0),
  cst=c=>{if(c.st=='paid')return'paid';const n=dd(c.due);return n===null?'up':n<0?'od':n<=3?'soon':'up'},
  dtx=c=>{if(c.st=='paid')return'Paid';const n=dd(c.due);return n===null?'No due date':n<0?`${-n} day${n==-1?'':'s'} overdue`:n==0?'Due today':n==1?'Due tomorrow':`Due in ${n} days`};
 function theme(){const d=S.set.mode=='dark'||(S.set.mode=='auto'&&matchMedia('(prefers-color-scheme:dark)').matches),c={...(d?DK:LT),accent:AC[S.set.accent][+d]};for(const k in c)document.documentElement.style.setProperty('--'+k,c[k]);document.querySelector('meta[name=theme-color]').content=c.accent}
-function sm(){const e=me(),av=S.acc.reduce((a,x)=>a+x.b,0),cm=S.cm.filter(c=>c.st=='pending'&&(!c.due||c.due<=e)).reduce((a,c)=>a+rem(c),0),aw=S.pr.reduce((a,p)=>a+Math.max(p.amt-paid(p),0),0);return{av,cm,aw,safe:Math.max(av-cm,0),short:Math.max(cm-av,0)}}
+function sm(){const e=me(),av=S.acc.reduce((a,x)=>a+x.b,0),g={Bills:0,Debt:0,Savings:0};let pb=0,pn=0;S.cm.filter(c=>c.st=='pending').forEach(c=>{const k=c.kind=='Debt'?'Debt':c.kind=='Savings'?'Savings':'Bills';if(!c.due||c.due<=e)g[k]+=rem(c);if(k=='Bills'){pb+=rem(c);pn++}});const cm=g.Bills+g.Debt+g.Savings,aw=S.pr.reduce((a,p)=>a+Math.max(p.amt-paid(p),0),0);return{av,cm,g,pb,pn,aw,sv:S.gl.reduce((a,x)=>a+x.saved,0),safe:Math.max(av-cm,0),short:Math.max(cm-av,0)}}
+const sh=n=>{const a=Math.abs(n);return(n<0?'-':'')+(a>=1e6?(a/1e6).toFixed(1).replace(/\.0$/,'')+'M':a>=1e3?Math.round(a/1e3)+'K':Math.round(a))},
+ C=(c,bg,x,a='')=>`<div class=card ${a} style="border-left:5px solid var(--${c});${bg?'background:var(--'+bg+')':''}">${x}</div>`,
+ H=(t,c)=>`<small style="color:var(--${c});font-weight:700;text-transform:uppercase">${t}</small>`,
+ KV=(a,b,c='')=>`<div class=top style="margin-top:4px"><small>${a}</small><span class="${c}">${F(b)}</span></div>`,
+ BG=(c,x,s=22)=>`<b style="display:block;font-size:${s}px;color:var(--${c})">${x}</b>`;
 function addTx(type,amt,a,cat,desc,date,x={}){S.tx.unshift({id:id(),type,amt,acc:a,cat,desc,date:date||td(),...x});const A=acc(a);A.b+=type=='income'?amt:-amt;if(type=='transfer')acc(x.to).b+=amt}
 function delTx(t){const A=acc(t.acc);if(A)A.b+=t.type=='income'?-t.amt:t.amt;if(t.type=='transfer'&&acc(t.to))acc(t.to).b-=t.amt;
  if(t.cid){const c=S.cm.find(c=>c.id==t.cid);if(c){c.paid=Math.max(c.paid-t.amt,0);c.st='pending'}}
+ if(t.gid){const g=S.gl.find(g=>g.id==t.gid);if(g)g.saved=Math.max(g.saved-t.amt,0)}
  if(t.pid){const p=S.pr.find(p=>p.id==t.pid);if(p)p.pay=p.pay.filter(x=>x.id!=t.pp)}S.tx=S.tx.filter(x=>x!==t)}
 function ask(title,fs,ok){const d=$('#dlg');d.innerHTML=`<form><h3>${title}</h3>${fs.map(f=>`<label>${f.l}${f.o?`<select name=${f.k}>${f.o.map(o=>`<option${o==f.v?' selected':''}>${E(o)}</option>`).join('')}</select>`:`<input name=${f.k} type=${f.t||'text'} value="${E(f.v??'')}" autocomplete=off ${f.m?'inputmode=decimal':''}>`}</label>`).join('')}<div class=row><button type=button onclick=dlg.close()>Cancel</button><button class=p>Save</button></div></form>`;
  d.querySelector('form').onsubmit=e=>{e.preventDefault();const r=ok(Object.fromEntries(new FormData(e.target)));if(r)alert(r);else d.close()};d.showModal()}
@@ -62,13 +70,20 @@ function addP(){ask('New project',[{k:'title',l:'Project'},{k:'client',l:'Client
 function payP(p){ask('Payment received: '+E(p.title),[{k:'amt',l:`Amount (UGX ${F(Math.max(p.amt-paid(p),0))} outstanding)`,m:1,v:Math.max(p.amt-paid(p),0)},{k:'acc',l:'Received into',o:AN(),v:'Mobile Money'}],f=>{const a=pa(f.amt);if(!a)return'Enter a valid amount';const pid=id();p.pay.push({id:pid,amt:a,date:td()});addTx('income',a,f.acc,'Freelance',p.title,td(),{pid:p.id,pp:pid});save()})}
 const row=(t,s,r,c='',x='')=>`<div class=row2 ${x}><div><b>${E(t)}</b><small>${E(s)}</small></div><div class="rt ${c}">${r}</div></div>`,
  cRow=c=>{const s=cst(c);return row(c.title,`${c.kind} · ${dtx(c)}`,`${F(rem(c))} ${s!='paid'?`<br><button class="s p" onclick="payC(S.cm.find(c=>c.id==${c.id}))">Pay</button>`:''}`,{od:'r',soon:'a'}[s]||'')};
-let tab='home',wv='p';const T={home:'Home',work:'Work',money:'Money',bills:'Bills',more:'Settings'};
-const V={home(){const s=sm(),ym=td().slice(0,7),t=S.tx.filter(x=>x.date.startsWith(ym)),i=t.filter(x=>x.type=='income').reduce((a,x)=>a+x.amt,0),e=t.filter(x=>x.type=='expense').reduce((a,x)=>a+x.amt,0),
- up=S.cm.filter(c=>c.st=='pending').sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1).slice(0,4);
- return`<h1>KiraVault</h1><div class=hero><small>Safe to spend</small><b>UGX ${F(s.safe)}</b><small>Available ${F(s.av)} − committed by month-end ${F(s.cm)}</small>${s.short?`<p class=bad>Short by UGX ${F(s.short)} for this month's commitments</p>`:''}</div>
- <form class=q onsubmit="return qk(this)"><input name=t placeholder="Quick add: spent 25k on lunch cash"><button class=p>Add</button></form>
- <div class=grid><div class=card><small>Awaiting from clients</small><b>${F(s.aw)}</b><small>Not counted until received</small></div><div class=card><small>This month</small><b class=g>+${F(i)}</b><b class=r>−${F(e)}</b></div></div>
- <h3>Coming up</h3><div class=card>${up.map(cRow).join('')||'<small>Nothing pending</small>'}</div>`},
+let tab='home',wv='p';const T={home:'Home',work:'Work',money:'Money',bills:'Bills',sav:'Savings',more:'Settings'};
+const V={home(){const s=sm(),nm=S.set.name,hr=new Date().getHours(),gr=hr<12?'GOOD MORNING':hr<17?'GOOD AFTERNOON':'GOOD EVENING',neg=s.short>0,
+ at=[...S.cm.filter(c=>c.st=='pending'&&cst(c)=='od').map(c=>[c.title+' is '+dtx(c),'r']),...S.cm.filter(c=>c.st=='pending'&&cst(c)=='soon').map(c=>[c.title+': '+dtx(c).toLowerCase(),'a']),...S.pr.filter(p=>p.dl&&p.amt>paid(p)&&dd(p.dl)<=7).map(p=>[p.title+(dd(p.dl)<0?': deadline passed':': deadline in '+dd(p.dl)+' days'),dd(p.dl)<0?'r':'a'])],
+ wk=S.pr.filter(p=>p.dl&&dd(p.dl)<=7).length;
+ return`<div class=top><small><b>${gr}${nm?', '+E(nm).toUpperCase():''}</b></small><button class=s onclick="go('more')">Settings</button></div>
+ <form class=q style="margin-top:10px" onsubmit="return qk(this)"><input name=t placeholder="Quick add: spent 25k on lunch cash"><button class=p>Add</button></form>
+ ${at.length?C('amber','ab',H('Needs attention','amber')+at.slice(0,6).map(([t,k])=>`<div class="${k}"><b>${E(t)}</b></div>`).join('')+(at.length>6?`<small>+${at.length-6} more</small>`:'')):''}
+ ${C('blue','',H('Total available','blue')+BG('text','UGX '+F(s.av),28)+S.acc.map(a=>KV(a.id,a.b,a.b<0?'r':'')).join(''))}
+ ${C('amber','',H('Committed','amber')+BG('amber','UGX '+F(s.cm))+KV('Bills',s.g.Bills)+KV('Debt',s.g.Debt)+KV('Savings target',s.g.Savings))}
+ ${C(neg?'red':'green',neg?'rb':'gb',H('Safe to spend',neg?'red':'green')+BG(neg?'red':'green','UGX '+F(s.safe),36)+'<small>Available money minus everything you\'ve already promised this month.</small>')}
+ <div class=grid>${C('teal','tb',H('Expected income','teal')+BG('teal',sh(s.aw),20)+'<small>Not counted until received</small>')}${C('pu','pb',H('Pending bills','pu')+BG('pu',sh(s.pb),20)+`<small>${s.pn} unpaid</small>`)}</div>
+ ${C('green','',H('Savings','green')+BG('green','UGX '+F(s.sv),20),"onclick=\"go('sav')\"")}
+ ${C('pu','',H('Work','pu')+`<b style="display:block;font-size:16px">${S.pr.length} projects | ${wk} due within 7 days</b><small>UGX ${F(s.aw)} still unpaid by clients (not counted until received)</small>`,"onclick=\"go('work')\"")}`},
+ sav(){return`<div class=top><h1>Savings goals</h1><button class=p onclick=addG()>+ Goal</button></div>`+(S.gl.map(g=>{const p=g.target?Math.min(g.saved/g.target,1):0;return C('green','',`<div class=top><b>${E(g.name)}</b><b class=g>${Math.round(p*100)}%</b></div><small>UGX ${sh(g.saved)} / ${sh(g.target)}</small><div class=bar><i style="width:${p*100}%"></i></div><small>UGX ${sh(Math.max(g.target-g.saved,0))} remaining${g.mo?' | Monthly target: UGX '+sh(g.mo):''}</small><div class=row style="justify-content:flex-start"><button class="s p" onclick="saveG(${g.id})">Add savings</button><button class=s onclick="delG(${g.id})">Delete</button></div>`)}).join('')||'<small>Create a goal (e.g. New Camera) and set a monthly amount to save.</small>')},
  money(){return`<div class=top><h1>Money</h1><button class=p onclick="txForm()">+ Add</button></div><div class=grid>${S.acc.map(a=>`<div class=card onclick="setB('${a.id}')"><small>${a.id}</small><b>${F(a.b)}</b></div>`).join('')}</div>
  <h3>Transactions</h3><div class=card>${S.tx.slice(0,60).map(t=>row(t.desc||t.cat||t.type,`${t.date} · ${t.acc}${t.type=='transfer'?' → '+t.to:''}`,(t.type=='income'?'+':t.type=='transfer'?'⇄ ':'−')+F(t.amt),t.type=='income'?'g':'',`onclick="if(confirm('Delete and reverse this transaction?')){delTx(S.tx.find(x=>x.id==${t.id}));save()}"`)).join('')||'<small>No transactions yet</small>'}</div>`},
  bills(){const p=S.cm.filter(c=>c.st=='pending').sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1),d=S.cm.filter(c=>c.st=='paid').slice(-5);
@@ -78,18 +93,21 @@ const V={home(){const s=sm(),ym=td().slice(0,7),t=S.tx.filter(x=>x.date.startsWi
  (wv=='c'?Object.entries(cl).map(([n,c])=>`<div class=card><b>${E(n)}</b> <small>${c.n} project${c.n>1?'s':''}</small><div class=grid><div><small>Billed</small><b>${F(c.b)}</b></div><div><small>Paid</small><b class=g>${F(c.p)}</b></div></div><small>Outstanding</small> <b class="${c.b>c.p?'r':''}">${F(Math.max(c.b-c.p,0))}</b></div>`).join('')||'<small>No clients yet</small>':
  P.map(p=>{const q=paid(p),o=Math.max(p.amt-q,0);return`<div class=card><div class=top><b>${E(p.title)}</b><small>${E(p.client)}</small></div><div class=bar><i style="width:${p.amt?Math.min(q/p.amt*100,100):0}%"></i></div><small>Paid ${F(q)} of ${F(p.amt)}${p.dl?' · due '+p.dl:''}</small><div class=top style="margin-top:8px"><b class="${o?'r':'g'}">${o?'Owed '+F(o):'Settled'}</b><span>${o?`<button class="s p" onclick="payP(S.pr.find(p=>p.id==${p.id}))">+ Payment</button> `:''}<button class=s onclick="if(confirm('Delete project?')){S.pr=S.pr.filter(x=>x.id!=${p.id});save()}">Delete</button></span></div></div>`}).join('')||'<small>No projects yet</small>')},
  more(){const o=(k,l,v)=>`<label>${l}<select onchange="S.set.${k}=this.value;save()">${v.map(x=>`<option${S.set[k]==x?' selected':''}>${x}</option>`).join('')}</select></label>`;
- return`<h1>Settings</h1><div class=card>${o('mode','Theme',['auto','light','dark'])}${o('accent','Accent colour',Object.keys(AC))}</div>
+ return`<h1>Settings</h1><div class=card><label>Your name<input value="${E(S.set.name||'')}" onchange="S.set.name=this.value;save()"></label>${o('mode','Theme',['auto','light','dark'])}${o('accent','Accent colour',Object.keys(AC))}</div>
  <h3>Backup</h3><div class=card><small>Everything lives on this device only. Last backup: ${S.bk||'never'}</small><div class=row style="justify-content:flex-start"><button class=p onclick=bak()>Export backup</button><button onclick="$('#imp').click()">Restore</button></div><input id=imp type=file accept=.json hidden onchange=imp(this)><small>Restore accepts backups from this web app and JSON backups from the Android app.</small></div>
  <h3>Data</h3><button onclick="if(confirm('Erase ALL data on this device?')){localStorage.removeItem(K);location.reload()}">Erase everything</button>`}};
+function addG(){ask('New savings goal',[{k:'name',l:'Goal (e.g. New Camera)'},{k:'t',l:'Target amount',m:1},{k:'mo',l:'Monthly target (optional)',m:1}],f=>{const t=pa(f.t);if(!f.name||!t)return'Enter a name and target';S.gl.push({id:id(),name:f.name,target:t,saved:0,mo:pa(f.mo)});save()})}
+function saveG(i){const g=S.gl.find(x=>x.id==i);ask('Save toward '+E(g.name),[{k:'amt',l:'Amount',m:1},{k:'acc',l:'From',o:AN(),v:'Mobile Money'}],f=>{const a=pa(f.amt);if(!a)return'Enter a valid amount';if(acc(f.acc).b<a)return`${f.acc} only has UGX ${F(acc(f.acc).b)}`;addTx('saving',a,f.acc,'Savings',g.name,td(),{gid:g.id});g.saved+=a;save()})}
+function delG(i){if(confirm('Delete this goal?')){S.gl=S.gl.filter(x=>x.id!=i);save()}}
 function setB(n){ask('Set '+n+' balance',[{k:'b',l:'Current balance',v:acc(n).b,m:1}],f=>{const v=pa(f.b);if(isNaN(v)||f.b==='')return'Enter a number';acc(n).b=v;save()})}
 function bak(){S.bk=td();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download=`kiravault-${td()}.json`;a.click();save()}
 function imp(i){const r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!confirm('Replace all current data with this backup?'))return;
  if(d.accounts){const nm={};d.accounts.forEach(a=>nm[a.id]=a.name);const cn={};(d.clients||[]).forEach(c=>cn[c.id]=c.name);
-  d={n:100000,acc:d.accounts.map(a=>({id:a.name,b:a.balance})),tx:d.transactions.map(t=>({id:t.id,type:t.type,amt:t.amount,acc:nm[t.account_id],to:nm[t.transfer_to],cat:t.category||t.source,desc:t.description,date:t.date,cid:t.commitment_id})).sort((a,b)=>b.date<a.date?-1:1),
+  d={n:100000,acc:d.accounts.map(a=>({id:a.name,b:a.balance})),tx:d.transactions.map(t=>({id:t.id,type:t.type,amt:t.amount,acc:nm[t.account_id],to:nm[t.transfer_to],cat:t.category||t.source,desc:t.description,date:t.date,cid:t.commitment_id,gid:t.goal_id})).sort((a,b)=>b.date<a.date?-1:1),
   cm:d.commitments.map(c=>({id:c.id,title:c.title,kind:c.kind,amt:c.amount,paid:c.paid_amount,due:c.due_date,acc:nm[c.account_id]||'Cash',rec:c.recurring,st:c.status})),
-  pr:(d.projects||[]).map(p=>({id:p.id,title:p.title,client:cn[p.client_id]||'No client',amt:p.amount||0,dl:p.deadline,st:p.status,pay:(d.payments||[]).filter(x=>x.project_id==p.id).map(x=>({id:x.id,amt:x.amount,date:x.paid_on}))})),set:S.set,bk:null}}
+  pr:(d.projects||[]).map(p=>({id:p.id,title:p.title,client:cn[p.client_id]||'No client',amt:p.amount||0,dl:p.deadline,st:p.status,pay:(d.payments||[]).filter(x=>x.project_id==p.id).map(x=>({id:x.id,amt:x.amount,date:x.paid_on}))})),gl:(d.goals||[]).map(g=>({id:g.id,name:g.name,target:g.target,saved:g.saved,mo:g.monthly_target})),set:S.set,bk:null}}
  if(!d.acc)throw 0;S=d;save()}catch{alert('That file is not a KiraVault backup')}};r.readAsText(i.files[0])}
 function go(t){tab=t;render();scrollTo(0,0)}
 function render(){theme();$('#nav').innerHTML=Object.entries(T).map(([k,v])=>`<button class="${k==tab?'on':''}" onclick="go('${k}')">${v}</button>`).join('');$('#m').innerHTML=V[tab]()}
-render();matchMedia('(prefers-color-scheme:dark)').onchange=theme;if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+if(sessionStorage.s)sp.remove();render();matchMedia('(prefers-color-scheme:dark)').onchange=theme;if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
